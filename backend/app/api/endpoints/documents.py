@@ -444,37 +444,95 @@ async def admin_update_document(
     Actualización administrativa de documento
     """
     try:
+        original_values = {}
         # Aplicar cambios administrativos
         if update_data.status is not None:
+            original_values["status"] = document.status
             document.status = update_data.status
         if update_data.approval_status is not None:
+            original_values["approval_status"] = document.approval_status
             document.approval_status = update_data.approval_status
         if update_data.approval_notes is not None:
+            original_values["approval_notes"] = document.approval_notes
             document.approval_notes = update_data.approval_notes
         if update_data.qr_code_id is not None:
+            original_values["qr_code_id"] = document.qr_code_id
             document.qr_code_id = update_data.qr_code_id
         if update_data.file_path is not None:
+            original_values["file_path"] = document.file_path
             document.file_path = update_data.file_path
         if update_data.onedrive_url is not None:
+            original_values["onedrive_url"] = document.onedrive_url
             document.onedrive_url = update_data.onedrive_url
         
         # Aplicar otros cambios si existen
         if update_data.person_info:
             # Aplicar cambios de persona
-            pass
+            info = DocumentPersonInfo(**update_data.person_info.dict(exclude_unset=True))
+            if info.cedula is not None:
+                original_values["cedula"] = document.cedula
+                document.cedula = info.cedula
+            if info.nombre_completo is not None:
+                original_values["nombre_completo"] = document.nombre_completo
+                document.nombre_completo = info.nombre_completo
+            if info.telefono is not None:
+                original_values["telefono"] = document.telefono
+                document.telefono = info.telefono
+            if info.email is not None:
+                original_values["email"] = document.email
+                document.email = info.email
+            if info.direccion is not None:
+                original_values["direccion"] = document.direccion
+                document.direccion = info.direccion
+            if info.additional_data:
+                original_values["additional_data"] = document.additional_data_dict
+                document.additional_data_dict = info.additional_data
         
         if update_data.metadata:
             # Aplicar cambios de metadatos
-            pass
+            meta = DocumentMetadata(**update_data.metadata.dict(exclude_unset=True))
+            if meta.tags is not None:
+                original_values["tags"] = document.tags_list
+                document.tags_list = meta.tags
+            if meta.category is not None:
+                original_values["category"] = document.category
+                document.category = meta.category
+            if meta.priority is not None:
+                original_values["priority"] = document.priority
+                document.priority = meta.priority
+            if meta.group_id is not None:
+                original_values["group_id"] = document.group_id
+                document.group_id = meta.group_id
+            if meta.sequence_number is not None:
+                original_values["sequence_number"] = document.sequence_number
+                document.sequence_number = meta.sequence_number
+            if meta.is_confidential is not None:
+                original_values["is_confidential"] = document.is_confidential
+                document.is_confidential = meta.is_confidential
+            if meta.access_level is not None:
+                original_values["access_level"] = document.access_level
+                document.access_level = meta.access_level
+
+        if update_data.additional_files is not None:
+            original_values["additional_files"] = document.additional_files_list
+            document.additional_files_list = update_data.additional_files
         
         document.update_version(current_user.id, "Actualización administrativa")
+        document.add_change_log("admin_updated", {"changes": original_values}, current_user.id)
         db.commit()
         db.refresh(document)
         
-        log_action("document_admin_updated", {
-            "document_id": document.id,
-            "changes": update_data.dict(exclude_unset=True)
-        })
+        log_action(
+            "document_admin_updated",
+            {
+                "document_id": document.id,
+                "changes": {
+                    key: {"from": original_values[key], "to": getattr(document, key)}
+                    for key in original_values
+                    if original_values[key] != getattr(document, key)
+                },
+            },
+        )
         
         return DocumentDetailed.from_orm(document)
         

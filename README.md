@@ -270,7 +270,7 @@ Como administrador, configura:
 3. Sistema genera:
    - Documento Word con datos llenos
    - Código QR único insertado
-   - Documento guardado en OneDrive
+   - Documento guardado en OneDrive (URL e ID almacenados)
    - Registro en base de datos
 ```
 
@@ -282,7 +282,7 @@ Como administrador, configura:
    - Metadatos del archivo
    - Texto por OCR (futuro)
 3. Validar y completar información
-4. Guardar y sincronizar con OneDrive
+4. Guardar y sincronizar con OneDrive (se guarda URL e ID)
 ```
 
 #### Búsqueda y Consulta

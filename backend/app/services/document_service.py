@@ -21,7 +21,11 @@ from ..schemas.document import (
 )
 from ..utils.qr_processor import get_qr_processor, extract_qr_from_file
 from ..utils.file_handler import get_file_handler, validate_and_save_file
-from ..services.microsoft_service import get_microsoft_service
+from ..services.microsoft_service import (
+    get_microsoft_service,
+    MicrosoftGraphError,
+)
+from ..database import SessionLocal
 from ..config import get_settings
 
 # Configuración
@@ -737,16 +741,99 @@ class DocumentService:
             user: Usuario propietario
         """
         try:
-            logger.info(f"Iniciando subida a OneDrive para documento {document.id}")
-            
-            # TODO: Implementar subida a OneDrive
-            # Por ahora solo simular la operación
-            await asyncio.sleep(2)
-            
-            logger.info(f"Documento {document.id} subido a OneDrive")
+            logger.info(
+                f"Iniciando subida a OneDrive para documento {document.id}"
+            )
+
+            # Verificar token de Microsoft en el usuario
+            access_token = getattr(user, "microsoft_access_token", None)
+            if not access_token:
+                logger.warning(
+                    "Usuario no tiene token de Microsoft, omitiendo subida a OneDrive"
+                )
+                return
+
+            # Verificar existencia del archivo local
+            local_path = os.path.join(settings.DOCUMENTS_PATH, document.file_path)
+            if not os.path.exists(local_path):
+                logger.error(
+                    f"Archivo local no encontrado para subir: {document.file_path}"
+                )
+                return
+
+            # Leer contenido
+            with open(local_path, "rb") as f:
+                file_content = f.read()
+
+            folder_path = f"root:/{settings.ONEDRIVE_ROOT_FOLDER}"
+            if document.document_type:
+                folder_path = f"{folder_path}/{document.document_type.code}"
+
+            def generate_name(doc: Document) -> str:
+                base_name, ext = os.path.splitext(doc.file_name)
+                safe_name = "".join(c for c in base_name if c.isalnum() or c in "._-")
+                timestamp = doc.created_at.strftime("%Y%m%d_%H%M%S")
+                return f"{doc.id}_{timestamp}_{safe_name}{ext}"
+
+            file_name = generate_name(document)
+
+            retries = 3
+            for attempt in range(1, retries + 1):
+                try:
+                    upload_result = await self.microsoft_service.upload_file_to_onedrive(
+                        access_token,
+                        file_name,
+                        file_content,
+                        folder_path,
+                    )
+
+                    onedrive_url = upload_result.get("webUrl")
+                    onedrive_id = upload_result.get("id")
+
+                    # Actualizar registro en BD
+                    db = SessionLocal()
+                    try:
+                        doc = db.query(Document).get(document.id)
+                        if doc:
+                            doc.onedrive_url = onedrive_url
+                            doc.onedrive_file_id = onedrive_id
+                            doc.add_change_log(
+                                "onedrive_upload",
+                                {
+                                    "onedrive_file_id": onedrive_id,
+                                    "onedrive_url": onedrive_url,
+                                },
+                                user.id,
+                            )
+                            db.commit()
+                    finally:
+                        db.close()
+
+                    logger.info(
+                        f"Documento {document.id} subido a OneDrive: {onedrive_url}"
+                    )
+                    return
+                except MicrosoftGraphError as e:
+                    logger.warning(
+                        f"Intento {attempt} fallido subiendo a OneDrive: {e.message}"
+                    )
+                    if attempt < retries:
+                        await asyncio.sleep(2**attempt)
+                        continue
+                    raise
             
         except Exception as e:
             logger.error(f"Error subiendo a OneDrive: {str(e)}")
+            db = SessionLocal()
+            try:
+                doc = db.query(Document).get(document.id)
+                if doc:
+                    doc.add_change_log(
+                        "onedrive_upload_failed", {"error": str(e)}, user.id
+                    )
+                    db.commit()
+            finally:
+                db.close()
 
 
 # === INSTANCIA GLOBAL ===
