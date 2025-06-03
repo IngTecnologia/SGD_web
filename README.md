@@ -143,8 +143,8 @@ documents         # Documentos principales con metadatos
 
 ```bash
 # Clonar repositorio
-git clone 
-cd sgd-web
+git clone https://github.com/IngTecnologia/SGD_web.git
+cd SGD_web
 
 # Configurar variables de entorno
 cp .env.example .env
