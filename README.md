@@ -532,9 +532,9 @@ tail -f logs/sgd_web.log | grep ERROR
 
 ## 📄 Licencia
 
-Copyright (c) 2024 Tu Empresa. Todos los derechos reservados.
+Copyright (c) 2024 INEMEC SAS. Todos los derechos reservados.
 
-Este software es propiedad de [Tu Empresa] y está protegido por las leyes de derechos de autor. El uso, distribución o modificación sin autorización expresa está prohibido.
+Este software es propiedad de INEMEC SAS y está protegido por las leyes de derechos de autor. El uso, distribución o modificación sin autorización expresa está prohibido.
 
 ---
 
