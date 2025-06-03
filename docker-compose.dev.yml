@@ -1,0 +1,213 @@
+# ===============================================
+# Docker Compose para Desarrollo
+# Configuración optimizada para desarrollo local
+# ===============================================
+
+version: '3.8'
+
+services:
+  
+  # === BASE DE DATOS ===
+  postgres:
+    image: postgres:15-alpine
+    container_name: sgd-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sgd_dev_db
+      POSTGRES_USER: sgd_dev_user
+      POSTGRES_PASSWORD: sgd_dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"  # Puerto diferente para no conflictar con PostgreSQL local
+    networks:
+      - sgd-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sgd_dev_user -d sgd_dev_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # === BACKEND API (DESARROLLO) ===
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sgd-backend-dev
+    restart: unless-stopped
+    environment:
+      # Base de datos
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: sgd_dev_db
+      POSTGRES_USER: sgd_dev_user
+      POSTGRES_PASSWORD: sgd_dev_password
+      
+      # Aplicación
+      ENVIRONMENT: development
+      SECRET_KEY: dev-secret-key-not-for-production
+      DEBUG: true
+      LOG_LEVEL: DEBUG
+      
+      # Microsoft 365 (usar variables de entorno del host)
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID}
+      MICROSOFT_REDIRECT_URI: http://localhost:8000/api/v1/auth/microsoft/callback
+      
+      # CORS - más permisivo en desarrollo
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000","http://localhost:8080"]'
+      
+      # Configuración de archivos
+      MAX_FILE_SIZE: 52428800  # 50MB
+      
+      # Emails de administradores para desarrollo
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-admin@test.com,dev@test.com}
+      
+    volumes:
+      # Hot reload - montar código fuente
+      - ./backend/app:/app/app:delegated
+      - ./backend/templates:/app/templates:delegated
+      
+      # Almacenamiento local para desarrollo
+      - ./backend/storage/documents:/app/storage/documents:delegated
+      - ./backend/storage/temp:/app/storage/temp:delegated
+      - ./backend/logs:/app/logs:delegated
+      
+      # Configuración
+      - ./backend/.env:/app/.env:ro
+      
+    ports:
+      - "8000:8000"
+    networks:
+      - sgd-dev-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/app"]
+
+  # === FRONTEND (DESARROLLO) ===
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sgd-frontend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:8000/api/v1
+      REACT_APP_ENVIRONMENT: development
+      CHOKIDAR_USEPOLLING: true
+      FAST_REFRESH: true
+    volumes:
+      # Hot reload - montar código fuente
+      - ./frontend/src:/app/src:delegated
+      - ./frontend/public:/app/public:delegated
+      - ./frontend/package.json:/app/package.json:ro
+      # Excluir node_modules para performance
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - sgd-dev-network
+    depends_on:
+      - backend
+    command: ["npm", "start"]
+
+  # === REDIS (DESARROLLO) ===
+  redis:
+    image: redis:7-alpine
+    container_name: sgd-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6380:6379"  # Puerto diferente para desarrollo
+    networks:
+      - sgd-dev-network
+
+  # === MAILHOG (para testing de emails) ===
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sgd-mailhog-dev
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - sgd-dev-network
+
+  # === PGADMIN (para gestión de BD) ===
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sgd-pgadmin-dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sgd.dev
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - sgd-dev-network
+    depends_on:
+      - postgres
+
+# === VOLÚMENES PARA DESARROLLO ===
+volumes:
+  postgres_dev_data:
+    driver: local
+    
+  redis_dev_data:
+    driver: local
+    
+  pgadmin_dev_data:
+    driver: local
+
+# === RED DE DESARROLLO ===
+networks:
+  sgd-dev-network:
+    driver: bridge
+
+# ===============================================
+# Instrucciones de uso para desarrollo:
+# ===============================================
+#
+# 1. Levantar servicios de desarrollo:
+#    docker-compose -f docker-compose.dev.yml up --build
+#
+# 2. Solo base de datos:
+#    docker-compose -f docker-compose.dev.yml up postgres pgadmin
+#
+# 3. Ver logs de un servicio específico:
+#    docker-compose -f docker-compose.dev.yml logs -f backend
+#
+# 4. Ejecutar comando en contenedor:
+#    docker-compose -f docker-compose.dev.yml exec backend bash
+#
+# 5. Rebuild de un servicio:
+#    docker-compose -f docker-compose.dev.yml up --build backend
+#
+# 6. Parar todo:
+#    docker-compose -f docker-compose.dev.yml down
+#
+# 7. Parar y limpiar volúmenes:
+#    docker-compose -f docker-compose.dev.yml down -v
+#
+# === URLS DE DESARROLLO ===
+# - Backend API: http://localhost:8000
+# - Frontend: http://localhost:3000  
+# - PgAdmin: http://localhost:5050
+# - MailHog: http://localhost:8025
+# - API Docs: http://localhost:8000/docs
+# - PostgreSQL: localhost:5433
+# - Redis: localhost:6380
+#
+# ===============================================

@@ -1,0 +1,52 @@
+
+# FastAPI and ASGI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+
+# Authentication & Microsoft Graph
+msal==1.25.0
+requests==2.31.0
+httpx==0.25.2
+
+# Document Processing
+PyMuPDF==1.23.9
+Pillow==10.1.0
+python-docx==1.1.0
+
+# QR Code Processing
+qrcode==7.4.2
+pyzbar==0.1.9
+opencv-python==4.8.1.78
+
+# Data Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# File Handling
+python-multipart==0.0.6
+aiofiles==23.2.1
+
+# Date/Time
+python-dateutil==2.8.2
+
+# Environment
+python-dotenv==1.0.0
+
+# CORS
+python-jose[cryptography]==3.3.0
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+
+# Production
+gunicorn==21.2.0

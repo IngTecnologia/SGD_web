@@ -1,0 +1,248 @@
+# ===============================================
+# Docker Compose para SGD Web
+# Sistema completo con PostgreSQL, Backend y Frontend
+# ===============================================
+
+version: '3.8'
+
+# === SERVICIOS ===
+services:
+  
+  # === BASE DE DATOS ===
+  postgres:
+    image: postgres:15-alpine
+    container_name: sgd-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sgd_db}
+      POSTGRES_USER: ${POSTGRES_USER:-sgd_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sgd_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - sgd-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sgd_user} -d ${POSTGRES_DB:-sgd_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # === BACKEND API ===
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: sgd-backend
+    restart: unless-stopped
+    environment:
+      # Base de datos
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-sgd_db}
+      POSTGRES_USER: ${POSTGRES_USER:-sgd_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sgd_password}
+      
+      # Aplicación
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      SECRET_KEY: ${SECRET_KEY:-your-super-secret-key-change-in-production}
+      DEBUG: ${DEBUG:-false}
+      
+      # Microsoft 365
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID}
+      MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI:-http://localhost:8000/api/v1/auth/microsoft/callback}
+      
+      # CORS
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080","http://127.0.0.1:3000"]}
+      
+      # Configuración de archivos
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-52428800}  # 50MB
+      
+      # Configuración de OneDrive
+      ONEDRIVE_SYNC_PATH: ${ONEDRIVE_SYNC_PATH:-/app/storage/documents}
+      ONEDRIVE_ROOT_FOLDER: ${ONEDRIVE_ROOT_FOLDER:-SGD_Documents}
+      
+      # Emails de administradores
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      
+      # Dominios permitidos
+      ALLOWED_DOMAINS: ${ALLOWED_DOMAINS:-}
+      
+    volumes:
+      # Almacenamiento persistente de documentos
+      - documents_storage:/app/storage/documents
+      - temp_storage:/app/storage/temp
+      - templates_storage:/app/templates
+      - logs_storage:/app/logs
+      
+      # Configuración externa (opcional)
+      - ./backend/.env:/app/.env:ro
+      
+    ports:
+      - "8000:8000"
+    networks:
+      - sgd-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # === FRONTEND ===
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: sgd-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8000/api/v1}
+      REACT_APP_ENVIRONMENT: ${ENVIRONMENT:-production}
+    ports:
+      - "3000:3000"
+    networks:
+      - sgd-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # === NGINX REVERSE PROXY ===
+  nginx:
+    image: nginx:alpine
+    container_name: sgd-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - logs_nginx:/var/log/nginx
+    networks:
+      - sgd-network
+    depends_on:
+      - backend
+      - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # === REDIS (para cache y sessions) ===
+  redis:
+    image: redis:7-alpine
+    container_name: sgd-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-sgd-redis-password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - sgd-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+# === VOLÚMENES PERSISTENTES ===
+volumes:
+  # Base de datos
+  postgres_data:
+    driver: local
+    
+  # Backend storage
+  documents_storage:
+    driver: local
+    
+  temp_storage:
+    driver: local
+    
+  templates_storage:
+    driver: local
+    
+  logs_storage:
+    driver: local
+    
+  # Nginx logs
+  logs_nginx:
+    driver: local
+    
+  # Redis data
+  redis_data:
+    driver: local
+
+# === REDES ===
+networks:
+  sgd-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ===============================================
+# Configuración adicional para desarrollo
+# ===============================================
+
+# Para usar en desarrollo, crear docker-compose.override.yml:
+#
+# version: '3.8'
+# services:
+#   backend:
+#     build:
+#       target: development
+#     volumes:
+#       - ./backend:/app
+#     environment:
+#       ENVIRONMENT: development
+#       DEBUG: true
+#       LOG_LEVEL: DEBUG
+#     command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+#
+#   frontend:
+#     build:
+#       target: development
+#     volumes:
+#       - ./frontend:/app
+#       - /app/node_modules
+#     environment:
+#       NODE_ENV: development
