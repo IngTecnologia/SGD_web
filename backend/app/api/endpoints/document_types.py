@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 
-from ...database import get_database
+from ...database import get_db
 from ...config import get_settings
 from ...models.user import User
 from ...models.document_type import DocumentType
@@ -74,7 +74,7 @@ async def list_document_types(
     pagination: PaginationParams = Depends(PaginationParams),
     
     # Dependencias
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -203,7 +203,7 @@ async def get_document_type(
 @router.get("/code/{type_code}", response_model=DocumentTypeSchema)
 async def get_document_type_by_code(
     type_code: str,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -242,7 +242,7 @@ async def get_document_type_by_code(
 @router.post("/", response_model=DocumentTypeSchema, status_code=status.HTTP_201_CREATED)
 async def create_document_type(
     document_type_data: DocumentTypeCreate,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_manage_types_permission),
     log_action = Depends(get_request_logger),
     _: bool = Depends(admin_rate_limit)
@@ -347,7 +347,7 @@ async def create_document_type(
 async def update_document_type(
     document_type_data: DocumentTypeUpdate,
     document_type: DocumentType = Depends(get_document_type_by_id),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_manage_types_permission),
     log_action = Depends(get_request_logger)
 ):
@@ -458,7 +458,7 @@ async def update_document_type(
 async def admin_update_document_type(
     document_type_data: DocumentTypeAdminUpdate,
     document_type: DocumentType = Depends(get_document_type_by_id),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     log_action = Depends(get_request_logger)
 ):
@@ -553,7 +553,7 @@ async def admin_update_document_type(
 @router.post("/validate", response_model=DocumentTypeValidationResponse)
 async def validate_document_data(
     validation_data: DocumentTypeValidation,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -612,7 +612,7 @@ async def validate_document_data(
 @router.post("/clone", response_model=DocumentTypeSchema)
 async def clone_document_type(
     clone_data: DocumentTypeClone,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_manage_types_permission),
     log_action = Depends(get_request_logger),
     _: bool = Depends(admin_rate_limit)
@@ -703,7 +703,7 @@ async def clone_document_type(
 @router.patch("/{document_type_id}/toggle")
 async def toggle_document_type_status(
     document_type: DocumentType = Depends(get_document_type_by_id),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_manage_types_permission),
     log_action = Depends(get_request_logger)
 ):
@@ -754,7 +754,7 @@ async def toggle_document_type_status(
 async def delete_document_type(
     document_type: DocumentType = Depends(get_document_type_by_id),
     force: bool = Query(False, description="Forzar eliminación even with documents"),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     log_action = Depends(get_request_logger),
     _: bool = Depends(admin_rate_limit)
@@ -848,7 +848,7 @@ async def delete_document_type(
 @router.post("/bulk-action", response_model=DocumentTypeBulkActionResponse)
 async def bulk_action_document_types(
     action_data: DocumentTypeBulkAction,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     log_action = Depends(get_request_logger),
     _: bool = Depends(admin_rate_limit)
@@ -997,7 +997,7 @@ async def get_template_info(
 async def upload_template(
     document_type_id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_manage_types_permission),
     log_action = Depends(get_request_logger)
 ):
@@ -1146,7 +1146,7 @@ async def download_template(
 @router.delete("/{document_type_id}/template")
 async def delete_template(
     document_type: DocumentType = Depends(get_document_type_by_id),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_manage_types_permission),
     log_action = Depends(get_request_logger)
 ):
@@ -1214,7 +1214,7 @@ async def delete_template(
 async def export_document_types(
     format: str = Query("json", regex="^(json|csv)$"),
     include_inactive: bool = Query(False),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     log_action = Depends(get_request_logger)
 ):
@@ -1268,7 +1268,7 @@ async def export_document_types(
 
 @router.get("/stats")
 async def get_document_types_stats(
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """

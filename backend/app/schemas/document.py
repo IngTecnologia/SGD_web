@@ -174,7 +174,7 @@ class DocumentCreate(DocumentBase):
     # Metadatos opcionales
     metadata: DocumentMetadata = Field(default_factory=DocumentMetadata, description="Metadatos")
     
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def validate_document_requirements(cls, values):
         """Validar que se cumplan los requisitos del tipo de documento"""
         # Esta validación se complementará con la lógica del tipo de documento

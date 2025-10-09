@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from jose import jwt
 import httpx
 
-from ...database import get_database
+from ...database import get_db
 from ...config import get_settings
 from ...models.user import User, UserRole, UserStatus
 from ...schemas.user import (
@@ -88,7 +88,7 @@ async def microsoft_callback(
     error: Optional[str] = None,
     error_description: Optional[str] = None,
     state: Optional[str] = None,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     log_action = Depends(get_request_logger)
 ):
     """
@@ -178,7 +178,7 @@ async def microsoft_callback(
 @router.post("/token", response_model=UserLoginResponse)
 async def login_with_microsoft_token(
     microsoft_token: str,
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     log_action = Depends(get_request_logger)
 ):
     """
@@ -569,7 +569,7 @@ def create_access_token(data: dict) -> str:
 @router.get("/users/sync")
 async def sync_users_with_microsoft(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     log_action = Depends(get_request_logger)
 ):
     """

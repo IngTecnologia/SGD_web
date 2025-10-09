@@ -11,15 +11,16 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
 from fastapi import HTTPException, status, UploadFile
 
-from ..models.document import Document, DocumentStatus, ApprovalStatus, AccessLevel
+from ..models.document import Document
 from ..models.document_type import DocumentType
 from ..models.user import User
 from ..models.qr_code import QRCode
 from ..schemas.document import (
     DocumentCreate, DocumentUpdate, DocumentFilter, DocumentSummary,
-    Document as DocumentSchema, DocumentDetailed
+    Document as DocumentSchema, DocumentDetailed,
+    DocumentStatus, ApprovalStatus, AccessLevel
 )
-from ..utils.qr_processor import get_qr_processor, extract_qr_from_file
+from ..utils.qr_processor import get_qr_processor, extract_qr_from_file, extract_qr_with_status
 from ..utils.file_handler import get_file_handler, validate_and_save_file
 from ..services.microsoft_service import (
     get_microsoft_service,
@@ -95,23 +96,23 @@ class DocumentService:
                 allowed_types=document_type.allowed_file_types_list
             )
             
-            # Extraer QR si el tipo lo requiere
-            qr_content = None
-            qr_extraction_success = False
-            qr_extraction_error = None
-            
-            if document_type.requires_qr:
-                try:
-                    qr_content = extract_qr_from_file(file_result["full_path"])
-                    if qr_content:
-                        qr_extraction_success = True
-                        logger.info(f"QR extraído exitosamente: {qr_content[:20]}...")
-                    else:
-                        qr_extraction_error = "No se encontró código QR en el archivo"
-                        logger.warning(f"No se pudo extraer QR del archivo: {file.filename}")
-                except Exception as e:
-                    qr_extraction_error = str(e)
-                    logger.error(f"Error extrayendo QR: {str(e)}")
+            # IMPORTANTE: Implementación de QR OPCIONAL
+            # Siempre intentamos extraer QR, pero NO fallamos si no se encuentra
+            # Esto permite registrar documentos con o sin QR según el concepto del PROJECT_BRIEF
+            qr_extraction_result = extract_qr_with_status(file_result["full_path"])
+
+            # Extraer campos del resultado
+            tiene_qr = qr_extraction_result["tiene_qr"]
+            qr_content = qr_extraction_result["qr_code"]
+            qr_extraction_success = qr_extraction_result["qr_extraction_success"]
+            qr_extraction_error = qr_extraction_result["qr_extraction_error"]
+            qr_extraction_data = qr_extraction_result["qr_extraction_data"]
+
+            # Log del resultado
+            if tiene_qr and qr_extraction_success:
+                logger.info(f"✓ Documento CON QR extraído exitosamente: {qr_content[:20]}...")
+            else:
+                logger.info(f"✓ Documento SIN QR registrado correctamente: {qr_extraction_error or 'No tiene QR'}")
             
             # Validar datos según requisitos del tipo
             validation_data = {
@@ -158,9 +159,11 @@ class DocumentService:
                 mime_type=file_result["file_info"].mime_type,
                 file_hash=file_result["file_info"].file_hash,
                 
-                # QR
+                # QR - Implementación del patrón QR OPCIONAL
+                tiene_qr=tiene_qr,
                 qr_code_id=qr_content if qr_content else None,
                 qr_extraction_success=qr_extraction_success,
+                qr_extraction_data=qr_extraction_data,
                 qr_extraction_error=qr_extraction_error,
                 
                 # Metadatos

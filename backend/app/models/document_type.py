@@ -3,10 +3,11 @@ Modelo de Tipo de Documento para SGD Web
 Permite configurar diferentes tipos de documentos con sus respectivos requisitos
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from ..database import Base
 
@@ -41,7 +42,11 @@ class DocumentType(Base):
     allowed_file_types = Column(Text)  # JSON string con tipos MIME permitidos
     max_file_size_mb = Column(Integer, default=50)  # Tamaño máximo en MB
     allow_multiple_files = Column(Boolean, default=False)  # Permitir múltiples archivos
-    
+
+    # Campos personalizados configurables
+    # Estructura: [{"id": "field_name", "label": "Label", "type": "text|number|date|select", "required": true, "options": [], "order": 1}]
+    custom_fields = Column(JSON, nullable=False, default=list)
+
     # === CONFIGURACIÓN DE GENERACIÓN ===
     # Plantilla para generación de documentos
     template_path = Column(String(255))  # Ruta a plantilla Word
@@ -132,10 +137,22 @@ class DocumentType(Base):
         """Establecer lista de emails para notificaciones"""
         import json
         self.notification_emails = json.dumps(value)
-    
+
+    @property
+    def custom_fields_list(self) -> List[Dict[str, Any]]:
+        """Obtener lista de campos personalizados"""
+        if not self.custom_fields or self.custom_fields is None:
+            return []
+        return self.custom_fields if isinstance(self.custom_fields, list) else []
+
+    @custom_fields_list.setter
+    def custom_fields_list(self, value: List[Dict[str, Any]]):
+        """Establecer lista de campos personalizados"""
+        self.custom_fields = value if value else []
+
     @property
     def required_fields(self) -> list:
-        """Obtener lista de campos requeridos"""
+        """Obtener lista de campos requeridos (base + custom)"""
         fields = []
         if self.requires_cedula:
             fields.append("cedula")
@@ -147,8 +164,13 @@ class DocumentType(Base):
             fields.append("email")
         if self.requires_direccion:
             fields.append("direccion")
-        if self.requires_qr:
-            fields.append("qr_code")
+        # Note: QR is not in required_fields because it's now optional (TIENE_QR pattern)
+
+        # Add custom required fields
+        for custom_field in self.custom_fields_list:
+            if custom_field.get("required", False):
+                fields.append(custom_field["id"])
+
         return fields
     
     @property
@@ -189,35 +211,72 @@ class DocumentType(Base):
     def validate_document_data(self, data: dict) -> tuple[bool, list]:
         """
         Validar datos de documento según los requisitos del tipo
-        
+
         Args:
             data: Diccionario con datos del documento
-            
+
         Returns:
             tuple: (is_valid, errors_list)
         """
         errors = []
-        
-        # Validar campos requeridos
+
+        # Validar campos base requeridos
+        base_field_names = {
+            "cedula": "Cédula",
+            "nombre": "Nombre completo",
+            "telefono": "Teléfono",
+            "email": "Email",
+            "direccion": "Dirección"
+        }
+
         for field in self.required_fields:
-            if field not in data or not data[field]:
-                field_name = {
-                    "cedula": "Cédula",
-                    "nombre": "Nombre completo",
-                    "telefono": "Teléfono",
-                    "email": "Email",
-                    "direccion": "Dirección",
-                    "qr_code": "Código QR"
-                }.get(field, field)
-                errors.append(f"{field_name} es requerido")
-        
+            # Check if it's a base field or custom field
+            if field in base_field_names:
+                if field not in data or not data[field]:
+                    errors.append(f"{base_field_names[field]} es requerido")
+            else:
+                # It's a custom field - check in additional_data
+                additional_data = data.get("additional_data", {})
+                if field not in additional_data or not additional_data[field]:
+                    # Find the custom field label
+                    custom_field = next(
+                        (cf for cf in self.custom_fields_list if cf["id"] == field),
+                        None
+                    )
+                    field_label = custom_field["label"] if custom_field else field
+                    errors.append(f"{field_label} es requerido")
+
         # Validar email si está presente
         if "email" in data and data["email"]:
             import re
             email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
             if not re.match(email_pattern, data["email"]):
                 errors.append("Email no tiene formato válido")
-        
+
+        # Validar tipos de datos en campos personalizados
+        additional_data = data.get("additional_data", {})
+        for custom_field in self.custom_fields_list:
+            field_id = custom_field["id"]
+            if field_id in additional_data and additional_data[field_id]:
+                value = additional_data[field_id]
+                field_type = custom_field.get("type", "text")
+
+                # Validate based on field type
+                if field_type == "number":
+                    try:
+                        float(value)
+                    except (ValueError, TypeError):
+                        errors.append(f"{custom_field['label']} debe ser un número válido")
+                elif field_type == "date":
+                    # Basic date validation (could be enhanced)
+                    if not isinstance(value, str) or len(value) < 8:
+                        errors.append(f"{custom_field['label']} debe ser una fecha válida")
+                elif field_type == "select":
+                    # Validate that value is in allowed options
+                    options = custom_field.get("options", [])
+                    if options and value not in options:
+                        errors.append(f"{custom_field['label']} debe ser una de las opciones permitidas")
+
         return len(errors) == 0, errors
     
     def increment_documents(self):
@@ -261,6 +320,7 @@ class DocumentType(Base):
             allowed_file_types=self.allowed_file_types,
             max_file_size_mb=self.max_file_size_mb,
             allow_multiple_files=self.allow_multiple_files,
+            custom_fields=self.custom_fields,
             template_path=self.template_path,
             qr_table_number=self.qr_table_number,
             qr_row=self.qr_row,
@@ -292,7 +352,8 @@ class DocumentType(Base):
                 "requires_telefono": self.requires_telefono,
                 "requires_email": self.requires_email,
                 "requires_direccion": self.requires_direccion,
-                "required_fields": self.required_fields
+                "required_fields": self.required_fields,
+                "custom_fields": self.custom_fields_list
             },
             "file_config": {
                 "allowed_file_types": self.allowed_file_types_list,

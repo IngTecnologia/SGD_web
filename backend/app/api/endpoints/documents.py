@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc
 
-from ...database import get_database
+from ...database import get_db
 from ...config import get_settings
 from ...models.user import User
 from ...models.document import Document
@@ -93,7 +93,7 @@ async def list_documents(
     pagination: PaginationParams = Depends(PaginationParams),
     
     # Dependencias
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -222,7 +222,7 @@ async def upload_document(
     file: UploadFile = File(..., description="Archivo del documento"),
     
     # Dependencias
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_upload_permission),
     log_action = Depends(get_request_logger),
     _: bool = Depends(upload_rate_limit)
@@ -300,7 +300,7 @@ async def upload_documents_batch(
     common_tags: Optional[str] = Form(None),
     files: List[UploadFile] = File(...),
     
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_upload_permission),
     log_action = Depends(get_request_logger),
     _: bool = Depends(upload_rate_limit)
@@ -401,7 +401,7 @@ async def upload_documents_batch(
 async def update_document(
     update_data: DocumentUpdate,
     document: Document = Depends(verify_document_ownership_or_admin),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     log_action = Depends(get_request_logger)
 ):
@@ -436,7 +436,7 @@ async def update_document(
 async def admin_update_document(
     update_data: DocumentAdminUpdate,
     document: Document = Depends(get_document_by_id),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     log_action = Depends(get_request_logger)
 ):
@@ -551,7 +551,7 @@ async def admin_update_document(
 async def approve_document(
     approval_data: DocumentApproval,
     document: Document = Depends(get_document_by_id),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
     log_action = Depends(get_request_logger)
 ):
@@ -655,7 +655,7 @@ async def download_document(
 async def delete_document(
     force: bool = Query(False, description="Eliminación permanente"),
     document: Document = Depends(verify_document_ownership_or_admin),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     log_action = Depends(get_request_logger)
 ):
@@ -708,7 +708,7 @@ async def delete_document(
 @router.get("/analytics", response_model=DocumentAnalytics)
 async def get_documents_analytics(
     document_type_id: Optional[int] = Query(None),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """

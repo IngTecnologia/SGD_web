@@ -774,18 +774,18 @@ def is_valid_qr_format(content: str) -> bool:
 def extract_qr_from_file(file_path: str) -> Optional[str]:
     """
     Extraer contenido de QR desde archivo (imagen o PDF)
-    
+
     Args:
         file_path: Ruta del archivo
-        
+
     Returns:
         Optional[str]: Contenido del QR o None
     """
     try:
         processor = get_qr_processor()
-        
+
         file_ext = os.path.splitext(file_path)[1].lower()
-        
+
         if file_ext == '.pdf':
             return processor.read_qr_from_pdf(file_path)
         elif file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp']:
@@ -793,7 +793,83 @@ def extract_qr_from_file(file_path: str) -> Optional[str]:
         else:
             logger.warning(f"Tipo de archivo no soportado para extracción de QR: {file_ext}")
             return None
-            
+
     except Exception as e:
         logger.error(f"Error extrayendo QR de archivo: {str(e)}")
         return None
+
+
+def extract_qr_with_status(file_path: str) -> Dict[str, Any]:
+    """
+    Extraer contenido de QR desde archivo con información de estado detallada.
+    Implementa el patrón QR OPCIONAL: intenta extraer QR pero NO falla si no existe.
+
+    Args:
+        file_path: Ruta del archivo
+
+    Returns:
+        Dict con:
+            - tiene_qr (bool): Si se detectó un QR en el documento
+            - qr_code (str|None): Contenido del QR si se encontró
+            - qr_extraction_success (bool): Si la extracción fue exitosa
+            - qr_extraction_error (str|None): Mensaje de error si aplica
+            - qr_extraction_data (dict|None): Datos parseados del QR
+    """
+    result = {
+        "tiene_qr": False,
+        "qr_code": None,
+        "qr_extraction_success": False,
+        "qr_extraction_error": None,
+        "qr_extraction_data": None
+    }
+
+    try:
+        processor = get_qr_processor()
+
+        file_ext = os.path.splitext(file_path)[1].lower()
+
+        # Verificar que el tipo de archivo sea soportado
+        if file_ext not in ['.pdf', '.png', '.jpg', '.jpeg', '.gif', '.bmp']:
+            result["qr_extraction_error"] = f"Tipo de archivo no soportado para extracción de QR: {file_ext}"
+            logger.info(f"Tipo de archivo no soportado para QR: {file_ext}. Continuando sin QR.")
+            return result
+
+        # Intentar extraer QR según el tipo de archivo
+        qr_content = None
+        if file_ext == '.pdf':
+            qr_content = processor.read_qr_from_pdf(file_path)
+        else:
+            qr_content = processor.read_qr_from_image(file_path)
+
+        # Si se encontró contenido QR
+        if qr_content:
+            result["tiene_qr"] = True
+            result["qr_code"] = qr_content
+            result["qr_extraction_success"] = True
+
+            # Intentar parsear datos estructurados
+            try:
+                parsed_data = processor.parse_qr_data_structure(qr_content)
+                result["qr_extraction_data"] = parsed_data
+            except Exception as parse_error:
+                logger.warning(f"No se pudo parsear datos del QR: {str(parse_error)}")
+                # No es un error crítico, el QR se extrajo correctamente
+
+            logger.info(f"QR extraído exitosamente del archivo: {file_path}")
+        else:
+            # No se encontró QR - esto NO es un error
+            result["tiene_qr"] = False
+            result["qr_extraction_success"] = False
+            result["qr_extraction_error"] = "No se detectó código QR en el documento"
+            logger.info(f"No se detectó QR en el archivo: {file_path}. Continuando sin QR.")
+
+        return result
+
+    except Exception as e:
+        # Error en el proceso de extracción
+        error_message = f"Error durante extracción de QR: {str(e)}"
+        result["tiene_qr"] = False
+        result["qr_extraction_success"] = False
+        result["qr_extraction_error"] = error_message
+        logger.warning(f"{error_message}. Continuando sin QR.")
+        return result

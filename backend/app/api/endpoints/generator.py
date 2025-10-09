@@ -15,7 +15,7 @@ from fastapi import (
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
-from ...database import get_database
+from ...database import get_db
 from ...config import get_settings
 from ...models.user import User
 from ...models.document_type import DocumentType
@@ -92,7 +92,7 @@ class DocumentGenerationResponse:
 
 @router.get("/templates")
 async def list_available_templates(
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_generate_permission)
 ):
     """
@@ -151,7 +151,7 @@ async def generate_document(
     additional_data: Optional[str] = Form(None, description="Datos adicionales en JSON"),
     
     # Dependencias
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_generate_permission),
     log_action = Depends(get_request_logger),
     _: bool = Depends(generation_rate_limit)
@@ -338,7 +338,7 @@ async def generate_documents_batch(
     # Archivo CSV con datos
     data_file: UploadFile = File(..., description="Archivo CSV con datos"),
     
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(require_generate_permission),
     log_action = Depends(get_request_logger),
     _: bool = Depends(generation_rate_limit)
@@ -699,7 +699,7 @@ async def process_batch_generation(
 @router.get("/stats")
 async def get_generation_stats(
     document_type_id: Optional[int] = Query(None),
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """

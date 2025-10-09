@@ -62,7 +62,8 @@ class Document(Base):
     
     # === PROCESAMIENTO Y ANÁLISIS ===
     # Información extraída del QR
-    qr_extraction_success = Column(Boolean, default=False)
+    tiene_qr = Column(Boolean, default=False, nullable=False)  # Si el documento físico tiene QR
+    qr_extraction_success = Column(Boolean, default=False, nullable=False)
     qr_extraction_data = Column(JSON)  # Datos extraídos del QR
     qr_extraction_error = Column(Text)  # Error en extracción si aplica
     
@@ -460,7 +461,8 @@ class Document(Base):
                 "last_viewed_at": self.last_viewed_at
             },
             "qr_info": {
-                "has_qr": bool(self.qr_code_id),
+                "tiene_qr": self.tiene_qr,
+                "has_qr_code": bool(self.qr_code_id),
                 "qr_code_id": self.qr_code_id,
                 "qr_extraction_success": self.qr_extraction_success
             }

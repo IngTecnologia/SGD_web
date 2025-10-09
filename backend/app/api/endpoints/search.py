@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc, asc, text
 
-from ...database import get_database
+from ...database import get_db
 from ...config import get_settings
 from ...models.user import User
 from ...models.document import Document
@@ -114,7 +114,7 @@ async def search_all(
     pagination: PaginationParams = Depends(PaginationParams),
     
     # Dependencias
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     log_action = Depends(get_request_logger)
 ):
@@ -248,7 +248,7 @@ async def search_documents_only(
     pagination: PaginationParams = Depends(PaginationParams),
     
     # Dependencias
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     log_action = Depends(get_request_logger)
 ):
@@ -390,7 +390,7 @@ async def search_qr_codes(
     
     pagination: PaginationParams = Depends(PaginationParams),
     
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     log_action = Depends(get_request_logger)
 ):
@@ -484,7 +484,7 @@ async def get_search_suggestions(
     q: str = Query(..., min_length=1, max_length=50, description="Término parcial"),
     limit: int = Query(10, ge=1, le=20, description="Número máximo de sugerencias"),
     
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -538,7 +538,7 @@ async def get_search_suggestions(
 async def get_search_stats(
     days: int = Query(30, ge=1, le=365, description="Días para estadísticas"),
     
-    db: Session = Depends(get_database),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """

@@ -1,7 +1,7 @@
 """
 Configuración de base de datos para SGD Web
 """
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
@@ -87,13 +87,13 @@ def drop_tables():
 def check_database_connection() -> bool:
     """
     Verificar conexión a la base de datos.
-    
+
     Returns:
         bool: True si la conexión es exitosa
     """
     try:
         with engine.connect() as connection:
-            connection.execute("SELECT 1")
+            connection.execute(text("SELECT 1"))
         logger.info("Conexión a base de datos exitosa")
         return True
     except Exception as e:
@@ -127,14 +127,14 @@ class DatabaseManager:
     def execute_sql(self, query: str, params: dict = None):
         """
         Ejecutar query SQL directamente.
-        
+
         Args:
             query: Query SQL a ejecutar
             params: Parámetros para el query
         """
         try:
             with self.engine.connect() as connection:
-                result = connection.execute(query, params or {})
+                result = connection.execute(text(query), params or {})
                 return result
         except Exception as e:
             logger.error(f"Error ejecutando SQL: {e}")
@@ -248,7 +248,7 @@ async def database_health_check() -> dict:
             with engine.connect() as connection:
                 # Verificar número de conexiones activas
                 result = connection.execute(
-                    "SELECT count(*) FROM pg_stat_activity WHERE state = 'active'"
+                    text("SELECT count(*) FROM pg_stat_activity WHERE state = 'active'")
                 )
                 active_connections = result.scalar()
                 

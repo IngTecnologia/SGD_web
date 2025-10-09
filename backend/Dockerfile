@@ -85,12 +85,14 @@ RUN mkdir -p /app/storage/documents \
 
 # Copiar código de la aplicación
 COPY ./app /app/app
-COPY ./templates /app/templates
-COPY ./static /app/static 2>/dev/null || true
 
-# Copiar archivos de configuración
-COPY ./alembic.ini /app/ 2>/dev/null || true
-COPY ./alembic /app/alembic 2>/dev/null || true
+# Copiar templates y static si existen
+COPY ./templates /app/templates
+COPY ./static /app/static
+
+# Copiar archivos de configuración de Alembic
+COPY ./alembic.ini /app/alembic.ini
+COPY ./alembic /app/alembic
 
 # === STAGE 5: Production Image ===
 FROM app-setup as production

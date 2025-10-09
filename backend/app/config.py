@@ -33,9 +33,9 @@ class Settings(BaseSettings):
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
     
     # === CONFIGURACIÓN DE MICROSOFT 365 ===
-    MICROSOFT_CLIENT_ID: str
-    MICROSOFT_CLIENT_SECRET: str
-    MICROSOFT_TENANT_ID: str
+    MICROSOFT_CLIENT_ID: Optional[str] = None
+    MICROSOFT_CLIENT_SECRET: Optional[str] = None
+    MICROSOFT_TENANT_ID: Optional[str] = None
     MICROSOFT_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/microsoft/callback"
     
     # Scopes requeridos para Microsoft Graph
@@ -51,12 +51,15 @@ class Settings(BaseSettings):
     
     @validator('ALLOWED_DOMAINS', pre=True)
     def parse_allowed_domains(cls, v):
+        if v is None or v == "":
+            return None
         if isinstance(v, str):
-            return [domain.strip() for domain in v.split(',') if domain.strip()]
+            domains = [domain.strip() for domain in v.split(',') if domain.strip()]
+            return domains if domains else None
         return v
     
     # === CONFIGURACIÓN DE SEGURIDAD ===
-    SECRET_KEY: str
+    SECRET_KEY: str = "sgd-web-super-secret-key-change-in-production-2024"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 horas
     
@@ -69,11 +72,22 @@ class Settings(BaseSettings):
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v):
+        if v is None or v == "":
+            return []
         if isinstance(v, str):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+            # Try to parse as JSON first
+            import json
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except (json.JSONDecodeError, ValueError):
+                pass
+            # If not JSON, treat as comma-separated
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, list):
             return v
-        raise ValueError(v)
+        raise ValueError(f"Invalid value for BACKEND_CORS_ORIGINS: {v}")
     
     # === CONFIGURACIÓN DE ALMACENAMIENTO ===
     # Carpeta local donde se almacenan los documentos
@@ -125,17 +139,39 @@ class Settings(BaseSettings):
     
     # === CONFIGURACIÓN DE ROLES ===
     DEFAULT_USER_ROLE: str = "viewer"
-    ADMIN_EMAILS: List[str] = []  # Emails que tendrán rol de admin automáticamente
+    ADMIN_EMAILS_STR: Optional[str] = None  # Emails de admin separados por comas
+
+    @property
+    def ADMIN_EMAILS(self) -> List[str]:
+        """Parse admin emails from comma-separated string"""
+        if not self.ADMIN_EMAILS_STR or self.ADMIN_EMAILS_STR == "":
+            return []
+        if isinstance(self.ADMIN_EMAILS_STR, str):
+            emails = [email.strip().lower() for email in self.ADMIN_EMAILS_STR.split(',') if email.strip()]
+            return emails if emails else []
+        return []
     
-    @validator('ADMIN_EMAILS', pre=True)
-    def parse_admin_emails(cls, v):
-        if isinstance(v, str):
-            return [email.strip().lower() for email in v.split(',') if email.strip()]
-        return [email.lower() for email in v] if v else []
+    # === CONFIGURACIÓN DE AUTENTICACIÓN LOCAL ===
+    LOCAL_AUTH_ENABLED: bool = True
+    DEMO_MODE: bool = True
+    
+    # Usuarios demo para desarrollo
+    DEMO_ADMIN_EMAIL: str = "admin@sgd-web.local"
+    DEMO_ADMIN_NAME: str = "Administrador SGD"
+    DEMO_ADMIN_PASSWORD: str = "admin123"
+    
+    DEMO_OPERATOR_EMAIL: str = "operator@sgd-web.local"
+    DEMO_OPERATOR_NAME: str = "Operador SGD"
+    DEMO_OPERATOR_PASSWORD: str = "operator123"
+    
+    DEMO_VIEWER_EMAIL: str = "viewer@sgd-web.local"
+    DEMO_VIEWER_NAME: str = "Visualizador SGD"
+    DEMO_VIEWER_PASSWORD: str = "viewer123"
     
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignorar variables de entorno que no están definidas en el modelo
 
 
 # Instancia global de configuración
