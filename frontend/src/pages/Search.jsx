@@ -61,6 +61,7 @@ import {
   IconEdit,
   IconTrash,
   IconHistory,
+  IconUpload,
 } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
@@ -91,16 +92,16 @@ const Search = () => {
   const documents = [
     {
       id: 'doc-1',
-      title: 'Contrato de Trabajo - María García',
+      title: 'Contrato de Trabajo - Marï¿½a Garcï¿½a',
       type: 'contract',
       category: 'hr',
-      description: 'Contrato de trabajo para la nueva empleada María García en el departamento de Recursos Humanos.',
+      description: 'Contrato de trabajo para la nueva empleada Marï¿½a Garcï¿½a en el departamento de Recursos Humanos.',
       tags: ['contrato', 'empleado', 'recursos-humanos'],
       priority: 'high',
       fileType: 'pdf',
       fileSize: 2.4,
       uploadDate: '2024-01-15',
-      uploadedBy: 'Ana López',
+      uploadedBy: 'Ana Lï¿½pez',
       qrCode: 'QR-CTR-001',
       status: 'active',
       lastModified: '2024-01-20',
@@ -127,16 +128,16 @@ const Search = () => {
     },
     {
       id: 'doc-3',
-      title: 'Política de Seguridad Actualizada',
+      title: 'Polï¿½tica de Seguridad Actualizada',
       type: 'policy',
       category: 'compliance',
-      description: 'Documento con las nuevas políticas de seguridad de la empresa.',
-      tags: ['política', 'seguridad', 'compliance'],
+      description: 'Documento con las nuevas polï¿½ticas de seguridad de la empresa.',
+      tags: ['polï¿½tica', 'seguridad', 'compliance'],
       priority: 'high',
       fileType: 'docx',
       fileSize: 0.8,
       uploadDate: '2024-01-10',
-      uploadedBy: 'Juan Pérez',
+      uploadedBy: 'Juan Pï¿½rez',
       qrCode: 'QR-POL-003',
       status: 'active',
       lastModified: '2024-01-25',
@@ -154,7 +155,7 @@ const Search = () => {
       fileType: 'pdf',
       fileSize: 4.1,
       uploadDate: '2024-01-05',
-      uploadedBy: 'Luis Martín',
+      uploadedBy: 'Luis Martï¿½n',
       qrCode: 'QR-MAN-004',
       status: 'archived',
       lastModified: '2024-01-15',
@@ -168,7 +169,7 @@ const Search = () => {
     { value: 'invoice', label: 'Factura' },
     { value: 'report', label: 'Informe' },
     { value: 'certificate', label: 'Certificado' },
-    { value: 'policy', label: 'Política' },
+    { value: 'policy', label: 'Polï¿½tica' },
     { value: 'manual', label: 'Manual' },
     { value: 'other', label: 'Otro' },
   ];
@@ -188,7 +189,7 @@ const Search = () => {
     { value: 'recursos-humanos', label: 'Recursos Humanos' },
     { value: 'informe', label: 'Informe' },
     { value: 'finanzas', label: 'Finanzas' },
-    { value: 'política', label: 'Política' },
+    { value: 'polï¿½tica', label: 'Polï¿½tica' },
     { value: 'seguridad', label: 'Seguridad' },
     { value: 'manual', label: 'Manual' },
     { value: 'procedimientos', label: 'Procedimientos' },
@@ -237,7 +238,7 @@ const Search = () => {
 
   const handleSearch = () => {
     setLoading(true);
-    // Simular búsqueda
+    // Simular bï¿½squeda
     setTimeout(() => {
       setLoading(false);
     }, 1000);
@@ -335,7 +336,7 @@ const Search = () => {
                   Buscar Documentos
                 </Title>
                 <Text color="gray.6" size="lg">
-                  Encuentra documentos en el sistema de gestión documental
+                  Encuentra documentos en el sistema de gestiï¿½n documental
                 </Text>
               </div>
               <Badge size="lg" variant="light" color="blue">
@@ -349,7 +350,7 @@ const Search = () => {
             <Stack spacing="md">
               <Group spacing="md">
                 <TextInput
-                  placeholder="Buscar por título, descripción o etiquetas..."
+                  placeholder="Buscar por tï¿½tulo, descripciï¿½n o etiquetas..."
                   icon={<IconSearch size={16} />}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -397,8 +398,8 @@ const Search = () => {
                         </Grid.Col>
                         <Grid.Col xs={12} sm={6} md={3}>
                           <Select
-                            label="Categoría"
-                            placeholder="Todas las categorías"
+                            label="Categorï¿½a"
+                            placeholder="Todas las categorï¿½as"
                             data={categories}
                             value={filters.category}
                             onChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
@@ -447,7 +448,7 @@ const Search = () => {
                         <Grid.Col xs={12} md={6}>
                           <div>
                             <Text size="sm" weight={500} mb="xs">
-                              Tamaño de archivo (MB)
+                              Tamaï¿½o de archivo (MB)
                             </Text>
                             <RangeSlider
                               min={0}
@@ -492,8 +493,8 @@ const Search = () => {
                   placeholder="Ordenar por"
                   data={[
                     { value: 'date', label: 'Fecha de subida' },
-                    { value: 'title', label: 'Título' },
-                    { value: 'size', label: 'Tamaño' },
+                    { value: 'title', label: 'Tï¿½tulo' },
+                    { value: 'size', label: 'Tamaï¿½o' },
                     { value: 'views', label: 'Visualizaciones' },
                   ]}
                   value={sortBy}
@@ -537,10 +538,10 @@ const Search = () => {
                     <tr>
                       <th>Documento</th>
                       <th>Tipo</th>
-                      <th>Categoría</th>
+                      <th>Categorï¿½a</th>
                       <th>Prioridad</th>
                       <th>Fecha</th>
-                      <th>Tamaño</th>
+                      <th>Tamaï¿½o</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -782,16 +783,16 @@ const Search = () => {
 
             <Tabs defaultValue="info">
               <Tabs.List>
-                <Tabs.Tab value="info">Información</Tabs.Tab>
+                <Tabs.Tab value="info">Informaciï¿½n</Tabs.Tab>
                 <Tabs.Tab value="activity">Actividad</Tabs.Tab>
-                <Tabs.Tab value="qr">Código QR</Tabs.Tab>
+                <Tabs.Tab value="qr">Cï¿½digo QR</Tabs.Tab>
               </Tabs.List>
 
               <Tabs.Panel value="info" pt="sm">
                 <Stack spacing="sm">
                   <Group>
                     <Text size="sm" weight={500} style={{ minWidth: 100 }}>
-                      Descripción:
+                      Descripciï¿½n:
                     </Text>
                     <Text size="sm">{selectedDocument.description}</Text>
                   </Group>
@@ -805,7 +806,7 @@ const Search = () => {
                   </Group>
                   <Group>
                     <Text size="sm" weight={500} style={{ minWidth: 100 }}>
-                      Categoría:
+                      Categorï¿½a:
                     </Text>
                     <Text size="sm">
                       {categories.find(c => c.value === selectedDocument.category)?.label}
@@ -825,7 +826,7 @@ const Search = () => {
                   </Group>
                   <Group>
                     <Text size="sm" weight={500} style={{ minWidth: 100 }}>
-                      Tamaño:
+                      Tamaï¿½o:
                     </Text>
                     <Text size="sm">{selectedDocument.fileSize} MB</Text>
                   </Group>
@@ -847,11 +848,11 @@ const Search = () => {
               <Tabs.Panel value="activity" pt="sm">
                 <Timeline active={2} bulletSize={24} lineWidth={2}>
                   <Timeline.Item
-                    bullet={<IconFileUpload size={12} />}
+                    bullet={<IconUpload size={12} />}
                     title="Documento subido"
                   >
                     <Text color="gray.6" size="sm">
-                      {selectedDocument.uploadedBy} subió el documento
+                      {selectedDocument.uploadedBy} subiï¿½ el documento
                     </Text>
                     <Text size="xs" color="gray.6">
                       {new Date(selectedDocument.uploadDate).toLocaleDateString()}
@@ -859,10 +860,10 @@ const Search = () => {
                   </Timeline.Item>
                   <Timeline.Item
                     bullet={<IconQrcode size={12} />}
-                    title="Código QR generado"
+                    title="Cï¿½digo QR generado"
                   >
                     <Text color="gray.6" size="sm">
-                      Se generó el código QR {selectedDocument.qrCode}
+                      Se generï¿½ el cï¿½digo QR {selectedDocument.qrCode}
                     </Text>
                     <Text size="xs" color="gray.6">
                       {new Date(selectedDocument.uploadDate).toLocaleDateString()}
@@ -876,7 +877,7 @@ const Search = () => {
                       El documento ha sido visto {selectedDocument.views} veces
                     </Text>
                     <Text size="xs" color="gray.6">
-                      Última visualización: {new Date(selectedDocument.lastModified).toLocaleDateString()}
+                      ï¿½ltima visualizaciï¿½n: {new Date(selectedDocument.lastModified).toLocaleDateString()}
                     </Text>
                   </Timeline.Item>
                 </Timeline>

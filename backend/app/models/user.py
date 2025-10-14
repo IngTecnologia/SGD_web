@@ -9,6 +9,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from enum import Enum as PyEnum
 from typing import Optional
+import bcrypt
 
 from ..database import Base
 
@@ -41,8 +42,12 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # Identificación de Microsoft
-    azure_id = Column(String(255), unique=True, nullable=False, index=True)
+    azure_id = Column(String(255), unique=True, nullable=True, index=True)  # Nullable para usuarios locales
     email = Column(String(100), unique=True, nullable=False, index=True)
+
+    # Autenticación local (opcional, para modo demo/desarrollo)
+    password_hash = Column(String(255), nullable=True)  # Solo para usuarios locales
+    is_local_user = Column(Boolean, default=False)  # Distinguir usuarios locales de M365
     
     # Información del usuario (sincronizada desde M365)
     name = Column(String(200), nullable=False)
@@ -58,14 +63,14 @@ class User(Base):
     
     # === CONFIGURACIÓN DEL SISTEMA ===
     role = Column(
-        Enum(UserRole), 
-        nullable=False, 
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
         default=UserRole.VIEWER,
         index=True
     )
-    
+
     status = Column(
-        Enum(UserStatus),
+        Enum(UserStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=UserStatus.PENDING,
         index=True
@@ -186,7 +191,28 @@ class User(Base):
     def can_manage_users(self) -> bool:
         """Verificar si puede gestionar usuarios"""
         return self.role == UserRole.ADMIN
-    
+
+    @property
+    def permissions(self) -> dict:
+        """Obtener permisos del usuario como diccionario"""
+        return {
+            "can_upload": self.can_upload,
+            "can_generate": self.can_generate,
+            "can_manage_types": self.can_manage_types,
+            "can_manage_users": self.can_manage_users
+        }
+
+    @property
+    def stats(self) -> dict:
+        """Obtener estadísticas del usuario como diccionario"""
+        return {
+            "login_count": self.login_count or 0,
+            "documents_uploaded": self.documents_uploaded or 0,
+            "documents_generated": self.documents_generated or 0,
+            "last_login": self.last_login,
+            "last_activity": self.last_activity
+        }
+
     def update_last_login(self):
         """Actualizar timestamp de último login"""
         now = datetime.utcnow()
@@ -260,14 +286,38 @@ class User(Base):
     def suspend(self, reason: str = None):
         """
         Suspender usuario temporalmente
-        
+
         Args:
             reason: Razón de la suspensión
         """
         self.status = UserStatus.SUSPENDED
         if reason:
             self.admin_notes = f"{self.admin_notes or ''}\n[{datetime.utcnow()}] Suspendido: {reason}".strip()
-    
+
+    def set_password(self, password: str):
+        """
+        Establecer contraseña para usuario local
+
+        Args:
+            password: Contraseña en texto plano
+        """
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.is_local_user = True
+
+    def verify_password(self, password: str) -> bool:
+        """
+        Verificar contraseña para usuario local
+
+        Args:
+            password: Contraseña en texto plano a verificar
+
+        Returns:
+            bool: True si la contraseña es correcta
+        """
+        if not self.password_hash or not self.is_local_user:
+            return False
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
     def to_dict(self) -> dict:
         """Convertir usuario a diccionario para APIs"""
         return {

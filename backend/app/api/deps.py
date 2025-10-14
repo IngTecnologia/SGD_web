@@ -112,13 +112,22 @@ def get_current_user_from_token(
     
     # Verificar token
     payload = verify_token(credentials.credentials)
-    
-    # Obtener ID del usuario del payload
-    user_id: int = payload.get("sub")
-    if user_id is None:
+
+    # Obtener ID del usuario del payload (sub es string en JWT, convertir a int)
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido: ID de usuario no encontrado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        user_id: int = int(user_id_str)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido: ID de usuario malformado",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

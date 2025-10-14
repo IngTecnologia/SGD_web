@@ -19,7 +19,7 @@ import {
   IconBell,
   IconCheck,
   IconAlertTriangle,
-  IconInfo,
+  IconInfoCircle,
   IconTrash,
   IconSettings,
 } from '@tabler/icons-react';
@@ -79,7 +79,7 @@ const NotificationCenter = ({ opened, onClose }) => {
       case 'error':
         return <IconX size={16} />;
       default:
-        return <IconInfo size={16} />;
+        return <IconInfoCircle size={16} />;
     }
   };
 

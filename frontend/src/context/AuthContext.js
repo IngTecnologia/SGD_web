@@ -155,17 +155,69 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, authInitialState);
 
-  // Inicializar MSAL
+  // Inicializar MSAL y verificar sesión local
   useEffect(() => {
-    const initializeMsal = async () => {
+    const initializeAuth = async () => {
       try {
         dispatch({ type: 'SET_LOADING', payload: true });
-        
+
+        // PRIMERO: Verificar si hay una sesión local válida
+        const localToken = localStorage.getItem('sgd_access_token');
+        const localUser = localStorage.getItem('sgd_user');
+
+        if (localToken && localUser) {
+          try {
+            // Verificar si el token local es válido
+            const parseJwt = (token) => {
+              try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                  atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+                );
+                return JSON.parse(jsonPayload);
+              } catch (e) {
+                return null;
+              }
+            };
+
+            const payload = parseJwt(localToken);
+            if (payload && payload.exp && payload.exp > Date.now() / 1000) {
+              // Token local válido, restaurar sesión
+              const user = JSON.parse(localUser);
+              dispatch({
+                type: 'LOGIN_SUCCESS',
+                payload: {
+                  user,
+                  accessToken: localToken,
+                  refreshToken: localStorage.getItem('sgd_refresh_token'),
+                  tokenExpiry: new Date(payload.exp * 1000),
+                  permissions: {
+                    canUpload: user.role === 'admin' || user.role === 'operator',
+                    canGenerate: user.role === 'admin' || user.role === 'operator',
+                    canManageTypes: user.role === 'admin',
+                    canManageUsers: user.role === 'admin',
+                  },
+                },
+              });
+              console.log('✅ Sesión local restaurada para:', user.email);
+              return;
+            }
+          } catch (localError) {
+            console.log('Error verificando sesión local:', localError);
+            // Si hay error, limpiar datos corruptos
+            localStorage.removeItem('sgd_access_token');
+            localStorage.removeItem('sgd_user');
+            localStorage.removeItem('sgd_refresh_token');
+          }
+        }
+
+        // SEGUNDO: Si no hay sesión local válida, intentar Microsoft
         await msalInstance.initialize();
-        
-        // Verificar si hay una sesión activa
+
+        // Verificar si hay una sesión activa de Microsoft
         const accounts = msalInstance.getAllAccounts();
-        
+
         if (accounts.length > 0) {
           // Intentar obtener token silenciosamente
           try {
@@ -173,7 +225,7 @@ export const AuthProvider = ({ children }) => {
               ...loginRequest,
               account: accounts[0],
             };
-            
+
             const response = await msalInstance.acquireTokenSilent(silentRequest);
             await processAuthResponse(response);
           } catch (silentError) {
@@ -185,15 +237,15 @@ export const AuthProvider = ({ children }) => {
           dispatch({ type: 'SET_LOADING', payload: false });
         }
       } catch (error) {
-        console.error('Error initializing MSAL:', error);
-        dispatch({ 
-          type: 'SET_ERROR', 
+        console.error('Error initializing auth:', error);
+        dispatch({
+          type: 'SET_ERROR',
           payload: 'Error al inicializar sistema de autenticación'
         });
       }
     };
 
-    initializeMsal();
+    initializeAuth();
   }, []);
 
   // Procesar respuesta de autenticación

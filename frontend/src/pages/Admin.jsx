@@ -57,10 +57,9 @@ import {
   IconInfoCircle,
   IconCloudUpload,
   IconServer,
-  IconBrandMicrosoft,
+  IconCloud,
   IconKey,
   IconLock,
-  IconUnlock,
   IconMail,
   IconPhone,
   IconCalendar,
@@ -73,8 +72,6 @@ import {
   IconFilter,
   IconExport,
   IconImport,
-  IconBackup,
-  IconRestore,
   IconBell,
   IconPalette,
   IconLanguage,
@@ -96,7 +93,7 @@ const Admin = () => {
   const users = [
     {
       id: 1,
-      name: 'María García',
+      name: 'Marï¿½a Garcï¿½a',
       email: 'maria.garcia@empresa.com',
       role: 'operator',
       status: 'active',
@@ -116,13 +113,13 @@ const Admin = () => {
       lastLogin: '2024-01-21T14:15:00',
       documentsUploaded: 128,
       avatar: null,
-      department: 'Tecnología',
+      department: 'Tecnologï¿½a',
       phone: '+34 634 567 890',
       joinDate: '2023-03-10',
     },
     {
       id: 3,
-      name: 'Ana López',
+      name: 'Ana Lï¿½pez',
       email: 'ana.lopez@empresa.com',
       role: 'viewer',
       status: 'inactive',
@@ -152,14 +149,14 @@ const Admin = () => {
       id: 1,
       type: 'user_created',
       user: 'Admin',
-      description: 'Nuevo usuario creado: Pedro Martín',
+      description: 'Nuevo usuario creado: Pedro Martï¿½n',
       timestamp: '2024-01-21T15:30:00',
       severity: 'info',
     },
     {
       id: 2,
       type: 'document_uploaded',
-      user: 'María García',
+      user: 'Marï¿½a Garcï¿½a',
       description: 'Documento subido: Contrato-EMP-045.pdf',
       timestamp: '2024-01-21T14:20:00',
       severity: 'success',
@@ -168,7 +165,7 @@ const Admin = () => {
       id: 3,
       type: 'system_backup',
       user: 'Sistema',
-      description: 'Backup automático completado',
+      description: 'Backup automï¿½tico completado',
       timestamp: '2024-01-21T02:00:00',
       severity: 'success',
     },
@@ -228,7 +225,7 @@ const Admin = () => {
       case 'document_uploaded':
         return <IconFileText size={16} />;
       case 'system_backup':
-        return <IconBackup size={16} />;
+        return <IconDatabase size={16} />;
       case 'login_failed':
         return <IconAlertTriangle size={16} />;
       default:
@@ -278,10 +275,10 @@ const Admin = () => {
             <Group position="apart">
               <div>
                 <Title order={1} size="h2" mb="xs">
-                  Panel de Administración
+                  Panel de Administraciï¿½n
                 </Title>
                 <Text color="gray.6" size="lg">
-                  Gestión completa del sistema SGD Web
+                  Gestiï¿½n completa del sistema SGD Web
                 </Text>
               </div>
               <Badge size="lg" variant="light" color="red" leftIcon={<IconCrown size={16} />}>
@@ -387,7 +384,7 @@ const Admin = () => {
                 Sistema
               </Tabs.Tab>
               <Tabs.Tab value="analytics" icon={<IconChartBar size={16} />}>
-                Analíticas
+                Analï¿½ticas
               </Tabs.Tab>
               <Tabs.Tab value="security" icon={<IconShield size={16} />}>
                 Seguridad
@@ -400,7 +397,7 @@ const Admin = () => {
                 <Paper p="lg" radius="md" withBorder>
                   <Group position="apart" mb="md">
                     <Title order={3}>
-                      Gestión de Usuarios
+                      Gestiï¿½n de Usuarios
                     </Title>
                     <Group spacing="sm">
                       <TextInput
@@ -427,7 +424,7 @@ const Admin = () => {
                           <th>Rol</th>
                           <th>Estado</th>
                           <th>Departamento</th>
-                          <th>Último acceso</th>
+                          <th>ï¿½ltimo acceso</th>
                           <th>Documentos</th>
                           <th>Acciones</th>
                         </tr>
@@ -502,10 +499,10 @@ const Admin = () => {
                                       Editar usuario
                                     </Menu.Item>
                                     <Menu.Item icon={<IconKey size={14} />}>
-                                      Resetear contraseña
+                                      Resetear contraseï¿½a
                                     </Menu.Item>
-                                    <Menu.Item 
-                                      icon={user.status === 'active' ? <IconLock size={14} /> : <IconUnlock size={14} />}
+                                    <Menu.Item
+                                      icon={<IconLock size={14} />}
                                       color={user.status === 'active' ? 'orange' : 'green'}
                                     >
                                       {user.status === 'active' ? 'Suspender' : 'Activar'}
@@ -560,7 +557,7 @@ const Admin = () => {
               <Stack spacing="md">
                 <Paper p="lg" radius="md" withBorder>
                   <Title order={3} mb="md">
-                    Gestión de Documentos
+                    Gestiï¿½n de Documentos
                   </Title>
                   <Grid>
                     <Grid.Col xs={12} md={6}>
@@ -571,7 +568,7 @@ const Admin = () => {
                           </ThemeIcon>
                           <div>
                             <Text size="sm" weight={500}>
-                              Estadísticas de Documentos
+                              Estadï¿½sticas de Documentos
                             </Text>
                             <Text size="xs" color="gray.6">
                               Resumen del sistema
@@ -592,7 +589,7 @@ const Admin = () => {
                             <Text size="sm" weight={500}>47</Text>
                           </Group>
                           <Group position="apart">
-                            <Text size="sm">Códigos QR generados:</Text>
+                            <Text size="sm">Cï¿½digos QR generados:</Text>
                             <Text size="sm" weight={500}>892</Text>
                           </Group>
                         </Stack>
@@ -637,7 +634,7 @@ const Admin = () => {
 
                 <Paper p="lg" radius="md" withBorder>
                   <Title order={4} mb="md">
-                    Herramientas de Gestión
+                    Herramientas de Gestiï¿½n
                   </Title>
                   <Grid>
                     <Grid.Col xs={12} sm={6} md={3}>
@@ -661,7 +658,7 @@ const Admin = () => {
                     <Grid.Col xs={12} sm={6} md={3}>
                       <Button
                         variant="light"
-                        leftIcon={<IconBackup size={16} />}
+                        leftIcon={<IconDatabase size={16} />}
                         fullWidth
                       >
                         Crear Backup
@@ -670,7 +667,7 @@ const Admin = () => {
                     <Grid.Col xs={12} sm={6} md={3}>
                       <Button
                         variant="light"
-                        leftIcon={<IconRestore size={16} />}
+                        leftIcon={<IconUpload size={16} />}
                         fullWidth
                       >
                         Restaurar Backup
@@ -687,13 +684,13 @@ const Admin = () => {
                 <Paper p="lg" radius="md" withBorder>
                   <Group position="apart" mb="md">
                     <Title order={3}>
-                      Configuración del Sistema
+                      Configuraciï¿½n del Sistema
                     </Title>
                     <Button
                       leftIcon={<IconSettings size={16} />}
                       onClick={() => setSettingsModalOpened(true)}
                     >
-                      Configuración Avanzada
+                      Configuraciï¿½n Avanzada
                     </Button>
                   </Group>
 
@@ -702,7 +699,7 @@ const Admin = () => {
                       <Card p="md" radius="md" withBorder>
                         <Group spacing="sm" mb="md">
                           <ThemeIcon size="lg" variant="light" color="blue">
-                            <IconBrandMicrosoft size={20} />
+                            <IconCloud size={20} />
                           </ThemeIcon>
                           <div>
                             <Text size="sm" weight={500}>
@@ -717,7 +714,7 @@ const Admin = () => {
                             <Badge size="xs" color="green">Sincronizado</Badge>
                           </Group>
                           <Group position="apart">
-                            <Text size="sm">Última sincronización:</Text>
+                            <Text size="sm">ï¿½ltima sincronizaciï¿½n:</Text>
                             <Text size="xs">hace 5 minutos</Text>
                           </Group>
                           <Group position="apart">
@@ -743,15 +740,15 @@ const Admin = () => {
                         </Group>
                         <Stack spacing="xs">
                           <Group position="apart">
-                            <Text size="sm">Versión PostgreSQL:</Text>
+                            <Text size="sm">Versiï¿½n PostgreSQL:</Text>
                             <Text size="xs">14.9</Text>
                           </Group>
                           <Group position="apart">
-                            <Text size="sm">Tamaño de BD:</Text>
+                            <Text size="sm">Tamaï¿½o de BD:</Text>
                             <Text size="xs">127 MB</Text>
                           </Group>
                           <Group position="apart">
-                            <Text size="sm">Último backup:</Text>
+                            <Text size="sm">ï¿½ltimo backup:</Text>
                             <Text size="xs">hace 2 horas</Text>
                           </Group>
                         </Stack>
@@ -793,8 +790,8 @@ const Admin = () => {
                     <Grid.Col xs={12} md={6}>
                       <Alert icon={<IconInfoCircle size={16} />} title="Estado del Sistema" color="green">
                         <Text size="sm">
-                          Todos los servicios están funcionando correctamente. 
-                          El último mantenimiento se realizó hace 3 días.
+                          Todos los servicios estï¿½n funcionando correctamente. 
+                          El ï¿½ltimo mantenimiento se realizï¿½ hace 3 dï¿½as.
                         </Text>
                       </Alert>
                     </Grid.Col>
@@ -807,12 +804,12 @@ const Admin = () => {
             <Tabs.Panel value="analytics" pt="md">
               <Paper p="lg" radius="md" withBorder>
                 <Title order={3} mb="md">
-                  Analíticas del Sistema
+                  Analï¿½ticas del Sistema
                 </Title>
-                <Alert icon={<IconInfoCircle size={16} />} title="Próximamente" color="blue">
+                <Alert icon={<IconInfoCircle size={16} />} title="Prï¿½ximamente" color="blue">
                   <Text size="sm">
-                    Esta sección incluirá gráficos detallados de uso, estadísticas 
-                    de documentos, análisis de usuarios y métricas de rendimiento.
+                    Esta secciï¿½n incluirï¿½ grï¿½ficos detallados de uso, estadï¿½sticas 
+                    de documentos, anï¿½lisis de usuarios y mï¿½tricas de rendimiento.
                   </Text>
                 </Alert>
               </Paper>
@@ -823,7 +820,7 @@ const Admin = () => {
               <Stack spacing="md">
                 <Paper p="lg" radius="md" withBorder>
                   <Title order={3} mb="md">
-                    Configuración de Seguridad
+                    Configuraciï¿½n de Seguridad
                   </Title>
                   <Grid>
                     <Grid.Col xs={12} md={6}>
@@ -834,24 +831,24 @@ const Admin = () => {
                           </ThemeIcon>
                           <div>
                             <Text size="sm" weight={500}>
-                              Políticas de Seguridad
+                              Polï¿½ticas de Seguridad
                             </Text>
                             <Text size="xs" color="gray.6">
-                              Configuración actual
+                              Configuraciï¿½n actual
                             </Text>
                           </div>
                         </Group>
                         <Stack spacing="sm">
                           <Group position="apart">
-                            <Text size="sm">Autenticación 2FA:</Text>
+                            <Text size="sm">Autenticaciï¿½n 2FA:</Text>
                             <Switch checked={true} />
                           </Group>
                           <Group position="apart">
-                            <Text size="sm">Sesiones automáticas:</Text>
+                            <Text size="sm">Sesiones automï¿½ticas:</Text>
                             <Switch checked={false} />
                           </Group>
                           <Group position="apart">
-                            <Text size="sm">Registro de auditoría:</Text>
+                            <Text size="sm">Registro de auditorï¿½a:</Text>
                             <Switch checked={true} />
                           </Group>
                           <Group position="apart">
@@ -872,7 +869,7 @@ const Admin = () => {
                               Alertas de Seguridad
                             </Text>
                             <Text size="xs" color="gray.6">
-                              Últimas 24 horas
+                              ï¿½ltimas 24 horas
                             </Text>
                           </div>
                         </Group>
@@ -897,11 +894,11 @@ const Admin = () => {
 
                 <Paper p="lg" radius="md" withBorder>
                   <Title order={4} mb="md">
-                    Registro de Auditoría
+                    Registro de Auditorï¿½a
                   </Title>
-                  <Alert icon={<IconInfoCircle size={16} />} title="Funcionalidad de auditoría" color="blue">
+                  <Alert icon={<IconInfoCircle size={16} />} title="Funcionalidad de auditorï¿½a" color="blue">
                     <Text size="sm">
-                      El registro completo de auditoría permite rastrear todas las acciones 
+                      El registro completo de auditorï¿½a permite rastrear todas las acciones 
                       realizadas en el sistema por cada usuario.
                     </Text>
                   </Alert>
@@ -925,7 +922,7 @@ const Admin = () => {
             <Grid.Col xs={12} sm={6}>
               <TextInput
                 label="Nombre completo"
-                placeholder="Ej: María García"
+                placeholder="Ej: Marï¿½a Garcï¿½a"
                 defaultValue={selectedUser?.name || ''}
                 required
               />
@@ -965,7 +962,7 @@ const Admin = () => {
           <Grid>
             <Grid.Col xs={12} sm={6}>
               <TextInput
-                label="Teléfono"
+                label="Telï¿½fono"
                 placeholder="+34 612 345 678"
                 defaultValue={selectedUser?.phone || ''}
               />
@@ -998,7 +995,7 @@ const Admin = () => {
       <Modal
         opened={settingsModalOpened}
         onClose={() => setSettingsModalOpened(false)}
-        title="Configuración Avanzada del Sistema"
+        title="Configuraciï¿½n Avanzada del Sistema"
         size="xl"
         centered
       >
@@ -1018,16 +1015,16 @@ const Admin = () => {
           <Tabs.Panel value="general" pt="md">
             <Stack spacing="md">
               <TextInput
-                label="Nombre de la organización"
+                label="Nombre de la organizaciï¿½n"
                 defaultValue="Mi Empresa S.L."
               />
               <Textarea
-                label="Descripción"
-                placeholder="Descripción de la organización"
+                label="Descripciï¿½n"
+                placeholder="Descripciï¿½n de la organizaciï¿½n"
                 minRows={2}
               />
               <NumberInput
-                label="Tamaño máximo de archivo (MB)"
+                label="Tamaï¿½o mï¿½ximo de archivo (MB)"
                 defaultValue={50}
                 min={1}
                 max={500}
@@ -1035,9 +1032,9 @@ const Admin = () => {
               <Select
                 label="Idioma predeterminado"
                 data={[
-                  { value: 'es', label: 'Español' },
+                  { value: 'es', label: 'Espaï¿½ol' },
                   { value: 'en', label: 'English' },
-                  { value: 'fr', label: 'Français' },
+                  { value: 'fr', label: 'Franï¿½ais' },
                 ]}
                 defaultValue="es"
               />
@@ -1048,7 +1045,7 @@ const Admin = () => {
             <Stack spacing="md">
               <Switch
                 label="Notificaciones por email"
-                description="Enviar notificaciones importantes por correo electrónico"
+                description="Enviar notificaciones importantes por correo electrï¿½nico"
                 defaultChecked={true}
               />
               <Switch
@@ -1071,16 +1068,17 @@ const Admin = () => {
                 data={[
                   { value: 'light', label: 'Claro' },
                   { value: 'dark', label: 'Oscuro' },
-                  { value: 'auto', label: 'Automático' },
+                  { value: 'auto', label: 'Automï¿½tico' },
                 ]}
                 defaultValue="light"
               />
-              <ColorInput
+              <TextInput
                 label="Color primario"
                 defaultValue="#339af0"
+                placeholder="#339af0"
               />
               <FileInput
-                label="Logo de la organización"
+                label="Logo de la organizaciï¿½n"
                 placeholder="Seleccionar archivo"
                 accept="image/*"
               />
@@ -1093,7 +1091,7 @@ const Admin = () => {
             Cancelar
           </Button>
           <Button>
-            Guardar Configuración
+            Guardar Configuraciï¿½n
           </Button>
         </Group>
       </Modal>

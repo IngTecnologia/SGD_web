@@ -10,14 +10,8 @@ import { NavigationProgress } from '@mantine/nprogress';
 import { HelmetProvider } from 'react-helmet-async';
 import { ErrorBoundary } from 'react-error-boundary';
 
-// Importar estilos de Mantine
-import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
-import '@mantine/nprogress/styles.css';
-import '@mantine/modals/styles.css';
-import '@mantine/dropzone/styles.css';
-import '@mantine/dates/styles.css';
-import '@mantine/spotlight/styles.css';
+// En Mantine v6, los estilos se manejan automÃ¡ticamente con withGlobalStyles
+// No se requieren imports de CSS explÃ­citos
 
 // Importar estilos personalizados
 import './styles/globals.css';
@@ -175,7 +169,7 @@ const theme = {
   },
 };
 
-// Componente raíz
+// Componente raï¿½z
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
@@ -185,7 +179,7 @@ root.render(
         FallbackComponent={ErrorFallback}
         onError={(error, errorInfo) => {
           console.error('Error capturado por ErrorBoundary:', error, errorInfo);
-          // Aquí puedes enviar el error a un servicio de monitoreo
+          // Aquï¿½ puedes enviar el error a un servicio de monitoreo
         }}
       >
         <BrowserRouter>
@@ -211,7 +205,7 @@ root.render(
   </React.StrictMode>
 );
 
-// Registrar Service Worker en producción
+// Registrar Service Worker en producciï¿½n
 if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -228,12 +222,12 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
 // Configurar manejo de errores no capturados
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  // Aquí puedes enviar el error a un servicio de monitoreo
+  // Aquï¿½ puedes enviar el error a un servicio de monitoreo
 });
 
 window.addEventListener('error', (event) => {
   console.error('Global error:', event.error);
-  // Aquí puedes enviar el error a un servicio de monitoreo
+  // Aquï¿½ puedes enviar el error a un servicio de monitoreo
 });
 
 // Reportar Web Vitals

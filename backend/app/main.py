@@ -33,6 +33,7 @@ from .api.endpoints import (
     document_types as document_types_router,
     generator as generator_router,
     search as search_router,
+    admin as admin_router,
 )
 
 # Configuración
@@ -74,7 +75,17 @@ async def lifespan(app: FastAPI):
             logger.error("❌ Error inicializando modelos")
             raise Exception("Error inicializando modelos")
         logger.info("✅ Modelos inicializados correctamente")
-        
+
+        # Inicializar usuarios demo (si está habilitado)
+        if settings.DEMO_MODE and settings.LOCAL_AUTH_ENABLED:
+            logger.info("👥 Inicializando usuarios demo...")
+            try:
+                from .init_demo_users import init_demo_data
+                init_demo_data()
+                logger.info("✅ Usuarios demo inicializados")
+            except Exception as e:
+                logger.warning(f"⚠️ Error inicializando usuarios demo: {str(e)}")
+
         # Verificar estructura de carpetas
         logger.info("📁 Verificando estructura de almacenamiento...")
         os.makedirs(settings.DOCUMENTS_PATH, exist_ok=True)
@@ -410,6 +421,13 @@ app.include_router(
     search_router.router,
     prefix=f"{API_V1_PREFIX}/search",
     tags=["Búsqueda"],
+)
+
+# Panel de administración
+app.include_router(
+    admin_router.router,
+    prefix=f"{API_V1_PREFIX}/admin",
+    tags=["Administración"],
 )
 
 

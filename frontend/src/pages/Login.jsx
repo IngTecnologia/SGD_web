@@ -15,9 +15,11 @@ import {
   List,
   Grid,
   Badge,
+  TextInput,
+  PasswordInput,
+  Anchor,
 } from '@mantine/core';
 import {
-  IconBrandMicrosoft,
   IconShield,
   IconCloud,
   IconDevices,
@@ -35,15 +37,19 @@ import LoadingScreen from '../components/common/LoadingScreen';
 const Login = () => {
   const { login, isAuthenticated, isLoading, error } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showLocalLogin, setShowLocalLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [localLoginError, setLocalLoginError] = useState(null);
   const location = useLocation();
 
-  // Redirigir si ya está autenticado
+  // Redirigir si ya estÃ¡ autenticado
   if (isAuthenticated) {
     const from = location.state?.from || '/dashboard';
     return <Navigate to={from} replace />;
   }
 
-  // Mensaje desde la redirección
+  // Mensaje desde la redirecciÃ³n
   const redirectMessage = location.state?.message;
 
   const handleLogin = async () => {
@@ -53,8 +59,8 @@ const Login = () => {
     } catch (error) {
       console.error('Error during login:', error);
       showNotification({
-        title: 'Error de inicio de sesión',
-        message: error.message || 'No se pudo completar el inicio de sesión',
+        title: 'Error de inicio de sesiÃ³n',
+        message: error.message || 'No se pudo completar el inicio de sesiÃ³n',
         color: 'red',
         icon: <IconAlertCircle size={16} />,
       });
@@ -63,8 +69,33 @@ const Login = () => {
     }
   };
 
+  const handleLocalLogin = async (e) => {
+    e.preventDefault();
+    setLocalLoginError(null);
+
+    try {
+      setIsLoggingIn(true);
+      const { default: AuthService } = await import('../services/auth');
+      await AuthService.loginWithLocal(email, password);
+
+      showNotification({
+        title: 'Inicio de sesiÃ³n exitoso',
+        message: 'Bienvenido al SGD Web',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Error during local login:', error);
+      setLocalLoginError(error.details || error.message || 'Usuario o contraseÃ±a incorrectos');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   if (isLoading || isLoggingIn) {
-    return <LoadingScreen message="Iniciando sesión..." variant="auth" showDetails />;
+    return <LoadingScreen message="Iniciando sesiÃ³n..." variant="auth" showDetails />;
   }
 
   return (
@@ -123,7 +154,7 @@ const Login = () => {
 
       <Container size="lg" style={{ position: 'relative', zIndex: 1, paddingTop: '5vh' }}>
         <Grid gutter="xl" align="center" style={{ minHeight: '90vh' }}>
-          {/* Columna izquierda - Información del producto */}
+          {/* Columna izquierda - InformaciÃ³n del producto */}
           <Grid.Col xs={12} md={6}>
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -131,7 +162,7 @@ const Login = () => {
               transition={{ duration: 0.6 }}
             >
               <Stack spacing="xl">
-                {/* Logo y título principal */}
+                {/* Logo y tÃ­tulo principal */}
                 <Group spacing="lg">
                   <ThemeIcon
                     size={60}
@@ -150,15 +181,15 @@ const Login = () => {
                       SGD Web
                     </Title>
                     <Text color="white" size="lg" opacity={0.9}>
-                      Sistema de Gestión Documental
+                      Sistema de GestiÃ³n Documental
                     </Text>
                   </Box>
                 </Group>
 
-                {/* Características principales */}
+                {/* CaracterÃ­sticas principales */}
                 <Box>
                   <Title order={2} color="white" size="1.5rem" mb="md">
-                    Gestión documental empresarial de última generación
+                    GestiÃ³n documental empresarial de Ãºltima generaciÃ³n
                   </Title>
                   
                   <List
@@ -171,12 +202,12 @@ const Login = () => {
                   >
                     <List.Item>
                       <Text color="white" opacity={0.9}>
-                        <strong>Integración Microsoft 365</strong> - Autenticación segura y sincronización automática
+                        <strong>IntegraciÃ³n Microsoft 365</strong> - AutenticaciÃ³n segura y sincronizaciÃ³n automÃ¡tica
                       </Text>
                     </List.Item>
                     <List.Item>
                       <Text color="white" opacity={0.9}>
-                        <strong>Códigos QR inteligentes</strong> - Generación y extracción automática
+                        <strong>CÃ³digos QR inteligentes</strong> - GeneraciÃ³n y extracciÃ³n automÃ¡tica
                       </Text>
                     </List.Item>
                     <List.Item>
@@ -186,13 +217,13 @@ const Login = () => {
                     </List.Item>
                     <List.Item>
                       <Text color="white" opacity={0.9}>
-                        <strong>Búsqueda avanzada</strong> - Encuentra documentos instantáneamente
+                        <strong>BÃºsqueda avanzada</strong> - Encuentra documentos instantÃ¡neamente
                       </Text>
                     </List.Item>
                   </List>
                 </Box>
 
-                {/* Estadísticas */}
+                {/* EstadÃ­sticas */}
                 <Group spacing="xl">
                   <Box style={{ textAlign: 'center' }}>
                     <Text color="white" size="2rem" weight={700}>
@@ -244,14 +275,14 @@ const Login = () => {
                   {/* Header */}
                   <Box style={{ textAlign: 'center' }}>
                     <Title order={2} color="gray.8" mb="xs">
-                      Iniciar Sesión
+                      Iniciar SesiÃ³n
                     </Title>
                     <Text color="gray.6" size="sm">
                       Accede con tu cuenta corporativa de Microsoft 365
                     </Text>
                   </Box>
 
-                  {/* Mensaje de redirección */}
+                  {/* Mensaje de redirecciÃ³n */}
                   <AnimatePresence>
                     {redirectMessage && (
                       <motion.div
@@ -271,7 +302,7 @@ const Login = () => {
                     )}
                   </AnimatePresence>
 
-                  {/* Error de autenticación */}
+                  {/* Error de autenticaciÃ³n */}
                   <AnimatePresence>
                     {error && (
                       <motion.div
@@ -281,7 +312,7 @@ const Login = () => {
                       >
                         <Alert
                           icon={<IconAlertCircle size={16} />}
-                          title="Error de autenticación"
+                          title="Error de autenticaciÃ³n"
                           color="red"
                           variant="light"
                         >
@@ -291,13 +322,84 @@ const Login = () => {
                     )}
                   </AnimatePresence>
 
-                  {/* Botón de login */}
-                  <motion.div
+                  {/* Formulario de login local */}
+                  {showLocalLogin ? (
+                    <>
+                      <form onSubmit={handleLocalLogin}>
+                        <Stack spacing="md">
+                          <TextInput
+                            label="Email"
+                            placeholder="admin@sgd-web.local"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            size="md"
+                            disabled={isLoggingIn}
+                          />
+                          <PasswordInput
+                            label="ContraseÃ±a"
+                            placeholder="Ingresa tu contraseÃ±a"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            size="md"
+                            disabled={isLoggingIn}
+                          />
+                          {localLoginError && (
+                            <Alert
+                              icon={<IconAlertCircle size={16} />}
+                              title="Error de inicio de sesiÃ³n"
+                              color="red"
+                              variant="light"
+                            >
+                              {localLoginError}
+                            </Alert>
+                          )}
+                          <Button
+                            type="submit"
+                            size="lg"
+                            fullWidth
+                            loading={isLoggingIn}
+                            style={{
+                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              border: 'none',
+                              height: '50px',
+                              fontSize: '16px',
+                              fontWeight: 600,
+                            }}
+                          >
+                            Iniciar SesiÃ³n
+                          </Button>
+                        </Stack>
+                      </form>
+
+                      <Divider label="o" labelPosition="center" />
+
+                      <Button
+                        variant="subtle"
+                        fullWidth
+                        onClick={() => setShowLocalLogin(false)}
+                      >
+                        Usar Microsoft 365 en su lugar
+                      </Button>
+
+                      {/* Usuarios demo info */}
+                      <Alert color="blue" variant="light">
+                        <Text size="xs" weight={600} mb={4}>Usuarios demo disponibles:</Text>
+                        <Text size="xs">â€¢ admin@sgd-web.local / admin123 (Administrador)</Text>
+                        <Text size="xs">â€¢ operator@sgd-web.local / operator123 (Operador)</Text>
+                        <Text size="xs">â€¢ viewer@sgd-web.local / viewer123 (Visualizador)</Text>
+                      </Alert>
+                    </>
+                  ) : (
+                    <>
+                      {/* BotÃ³n de login Microsoft */}
+                      <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <Button
-                      leftIcon={<IconBrandMicrosoft size={20} />}
+                      leftIcon={<IconCloud size={20} />}
                       size="lg"
                       fullWidth
                       loading={isLoggingIn}
@@ -310,13 +412,30 @@ const Login = () => {
                         fontWeight: 600,
                       }}
                     >
-                      {isLoggingIn ? 'Iniciando sesión...' : 'Continuar con Microsoft 365'}
+                      {isLoggingIn ? 'Iniciando sesiÃ³n...' : 'Continuar con Microsoft 365'}
                     </Button>
                   </motion.div>
 
-                  <Divider label="Características de seguridad" labelPosition="center" />
+                  <Divider label="o" labelPosition="center" />
 
-                  {/* Características de seguridad */}
+                  <Button
+                    variant="outline"
+                    size="md"
+                    fullWidth
+                    onClick={() => setShowLocalLogin(true)}
+                    style={{
+                      borderColor: '#667eea',
+                      color: '#667eea',
+                    }}
+                  >
+                    Usar acceso local (demo)
+                  </Button>
+                    </>
+                  )}
+
+                  <Divider label="CaracterÃ­sticas de seguridad" labelPosition="center" />
+
+                  {/* CaracterÃ­sticas de seguridad */}
                   <Grid gutter="md">
                     <Grid.Col span={6}>
                       <Group spacing="xs">
@@ -324,7 +443,7 @@ const Login = () => {
                           <IconShield size={14} />
                         </ThemeIcon>
                         <Text size="xs" color="gray.6">
-                          Autenticación única
+                          AutenticaciÃ³n Ãºnica
                         </Text>
                       </Group>
                     </Grid.Col>
@@ -344,7 +463,7 @@ const Login = () => {
                           <IconCloud size={14} />
                         </ThemeIcon>
                         <Text size="xs" color="gray.6">
-                          Respaldo automático
+                          Respaldo automÃ¡tico
                         </Text>
                       </Group>
                     </Grid.Col>
@@ -360,12 +479,12 @@ const Login = () => {
                     </Grid.Col>
                   </Grid>
 
-                  {/* Información adicional */}
+                  {/* InformaciÃ³n adicional */}
                   <Box style={{ textAlign: 'center' }}>
                     <Text size="xs" color="gray.5">
-                      Al iniciar sesión, aceptas nuestros términos de servicio y política de privacidad.
+                      Al iniciar sesiÃ³n, aceptas nuestros tÃ©rminos de servicio y polÃ­tica de privacidad.
                       <br />
-                      ¿Necesitas ayuda? Contacta a{' '}
+                      Â¿Necesitas ayuda? Contacta a{' '}
                       <Text component="span" color="blue.6" weight={500}>
                         soporte@tuempresa.com
                       </Text>
@@ -389,7 +508,7 @@ const Login = () => {
               SGD Web v1.0.0
             </Badge>
             <Badge variant="light" color="white" size="lg">
-              INEMEC SAS © 2024
+              INEMEC SAS Â© 2024
             </Badge>
             <Badge variant="light" color="white" size="lg">
               Powered by Microsoft 365

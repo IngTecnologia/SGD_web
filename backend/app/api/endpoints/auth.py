@@ -17,10 +17,11 @@ from ...database import get_db
 from ...config import get_settings
 from ...models.user import User, UserRole, UserStatus
 from ...schemas.user import (
-    UserLoginResponse, 
-    User as UserSchema, 
+    UserLoginResponse,
+    User as UserSchema,
     UserMicrosoftData,
-    UserCreate
+    UserCreate,
+    UserLocalLogin
 )
 from ..deps import get_current_user, get_current_user_optional, get_request_logger
 
@@ -173,6 +174,86 @@ async def microsoft_callback(
         frontend_url = settings.BACKEND_CORS_ORIGINS[0] if settings.BACKEND_CORS_ORIGINS else "/"
         error_url = f"{frontend_url}/login?error=callback_error"
         return RedirectResponse(url=error_url)
+
+
+@router.post("/local/login", response_model=UserLoginResponse)
+async def login_local(
+    credentials: UserLocalLogin,
+    db: Session = Depends(get_db),
+    log_action = Depends(get_request_logger)
+):
+    """
+    Login con usuario y contraseña local (modo demo/desarrollo)
+
+    Args:
+        credentials: Email y contraseña del usuario
+        db: Sesión de base de datos
+        log_action: Logger de acciones
+
+    Returns:
+        UserLoginResponse: Información del usuario y token JWT
+    """
+    try:
+        # Verificar si la autenticación local está habilitada
+        if not settings.LOCAL_AUTH_ENABLED:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Autenticación local no habilitada"
+            )
+
+        # Buscar usuario por email
+        user = db.query(User).filter(
+            User.email == credentials.email.lower(),
+            User.is_local_user == True
+        ).first()
+
+        if not user or not user.verify_password(credentials.password):
+            logger.warning(f"Intento de login fallido para: {credentials.email}")
+            log_action("failed_local_login", {"email": credentials.email}, "warning")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email o contraseña incorrectos"
+            )
+
+        # Verificar que el usuario esté activo
+        if not user.is_active or user.status == UserStatus.SUSPENDED:
+            logger.warning(f"Intento de login de usuario inactivo: {credentials.email}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Usuario inactivo o suspendido"
+            )
+
+        # Generar JWT
+        access_token = create_access_token({"sub": user.id})
+
+        # Log de login exitoso
+        log_action("successful_local_login", {
+            "user_id": user.id,
+            "email": user.email
+        })
+
+        # Actualizar último login
+        user.update_last_login()
+        db.commit()
+
+        logger.info(f"Login local exitoso para usuario: {user.email}")
+
+        return UserLoginResponse(
+            user=UserSchema.from_orm(user),
+            access_token=access_token,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error en login local: {str(e)}")
+        log_action("local_login_error", {"error": str(e)}, "error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al procesar login"
+        )
 
 
 @router.post("/token", response_model=UserLoginResponse)
@@ -544,23 +625,28 @@ async def create_or_update_user(user_info: UserMicrosoftData, db: Session) -> Us
 def create_access_token(data: dict) -> str:
     """
     Crear token JWT de acceso
-    
+
     Args:
         data: Datos a incluir en el token
-        
+
     Returns:
         str: Token JWT codificado
     """
     to_encode = data.copy()
+
+    # Asegurar que 'sub' sea string (requisito de JWT)
+    if 'sub' in to_encode:
+        to_encode['sub'] = str(to_encode['sub'])
+
     expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire, "iat": datetime.utcnow()})
-    
+
     encoded_jwt = jwt.encode(
-        to_encode, 
-        settings.SECRET_KEY, 
+        to_encode,
+        settings.SECRET_KEY,
         algorithm=settings.ALGORITHM
     )
-    
+
     return encoded_jwt
 
 

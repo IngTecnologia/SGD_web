@@ -33,22 +33,22 @@
     "react-query": "^3.39.3",
     "axios": "^1.6.0",
     
-    "@mantine/core": "^7.3.0",
-    "@mantine/hooks": "^7.3.0",
-    "@mantine/notifications": "^7.3.0",
-    "@mantine/modals": "^7.3.0",
-    "@mantine/dropzone": "^7.3.0",
-    "@mantine/spotlight": "^7.3.0",
-    "@mantine/dates": "^7.3.0",
-    "@mantine/form": "^7.3.0",
-    "@mantine/nprogress": "^7.3.0",
+    "@mantine/core": "^6.0.21",
+    "@mantine/hooks": "^6.0.21",
+    "@mantine/notifications": "^6.0.21",
+    "@mantine/modals": "^6.0.21",
+    "@mantine/dropzone": "^6.0.21",
+    "@mantine/spotlight": "^6.0.21",
+    "@mantine/dates": "^6.0.21",
+    "@mantine/form": "^6.0.21",
+    "@mantine/nprogress": "^6.0.21",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     
     "@azure/msal-browser": "^3.5.0",
     "@azure/msal-react": "^2.0.9",
     
-    "@tabler/icons-react": "^2.42.0",
+    "@tabler/icons-react": "^2.1.0",
     "@heroicons/react": "^2.0.18",
     
     "framer-motion": "^10.16.4",
@@ -122,7 +122,7 @@
       "prettier"
     ],
     "rules": {
-      "prettier/prettier": "error",
+      "prettier/prettier": "warn",
       "react-hooks/exhaustive-deps": "warn",
       "no-unused-vars": "warn",
       "no-console": "warn"

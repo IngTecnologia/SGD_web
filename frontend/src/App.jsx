@@ -12,6 +12,9 @@ import Layout from './components/common/Layout';
 import LoadingScreen from './components/common/LoadingScreen';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
+// Hooks
+import { useAuth } from './hooks/useAuth';
+
 // Pages (Lazy loaded para mejor performance)
 const Login = React.lazy(() => import('./pages/Login'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
@@ -21,18 +24,15 @@ const Generator = React.lazy(() => import('./pages/Generator'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 
-// Hooks
-import { useAuth } from './hooks/useAuth';
-
-// Configuración de la aplicación
+// Configuraciï¿½n de la aplicaciï¿½n
 const AppContent = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   useEffect(() => {
-    // Configurar título dinámico de la página
-    document.title = 'SGD Web - Sistema de Gestión Documental';
+    // Configurar tï¿½tulo dinï¿½mico de la pï¿½gina
+    document.title = 'SGD Web - Sistema de Gestiï¿½n Documental';
     
-    // Configurar meta viewport para dispositivos móviles
+    // Configurar meta viewport para dispositivos mï¿½viles
     const viewport = document.querySelector("meta[name=viewport]");
     if (viewport) {
       viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
@@ -54,18 +54,18 @@ const AppContent = () => {
     };
   }, []);
 
-  // Mostrar loading mientras se verifica autenticación
+  // Mostrar loading mientras se verifica autenticaciï¿½n
   if (isLoading) {
-    return <LoadingScreen message="Verificando autenticación..." />;
+    return <LoadingScreen message="Verificando autenticaciï¿½n..." />;
   }
 
-  // Si no está autenticado, mostrar solo rutas públicas
+  // Si no estï¿½ autenticado, mostrar solo rutas pï¿½blicas
   if (!isAuthenticated) {
     return (
       <>
         <Helmet>
-          <title>SGD Web - Iniciar Sesión</title>
-          <meta name="description" content="Sistema de Gestión Documental Web - Iniciar Sesión con Microsoft 365" />
+          <title>SGD Web - Iniciar Sesiï¿½n</title>
+          <meta name="description" content="Sistema de Gestiï¿½n Documental Web - Iniciar Sesiï¿½n con Microsoft 365" />
         </Helmet>
         
         <Routes>
@@ -76,19 +76,19 @@ const AppContent = () => {
     );
   }
 
-  // Si está autenticado, mostrar aplicación completa
+  // Si estï¿½ autenticado, mostrar aplicaciï¿½n completa
   return (
     <>
       <Helmet>
         <title>SGD Web - Dashboard</title>
-        <meta name="description" content="Sistema de Gestión Documental Web - Panel de Control" />
+        <meta name="description" content="Sistema de Gestiï¿½n Documental Web - Panel de Control" />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <Layout>
-        <Suspense fallback={<LoadingScreen message="Cargando módulo..." />}>
+        <Suspense fallback={<LoadingScreen message="Cargando mï¿½dulo..." />}>
           <Routes>
-            {/* Redirección raíz */}
+            {/* Redirecciï¿½n raï¿½z */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Dashboard principal */}
@@ -111,7 +111,7 @@ const AppContent = () => {
               } 
             />
             
-            {/* Búsqueda de documentos */}
+            {/* Bï¿½squeda de documentos */}
             <Route 
               path="/search" 
               element={
@@ -131,7 +131,7 @@ const AppContent = () => {
               } 
             />
             
-            {/* Panel de administración */}
+            {/* Panel de administraciï¿½n */}
             <Route 
               path="/admin/*" 
               element={
@@ -141,7 +141,7 @@ const AppContent = () => {
               } 
             />
             
-            {/* Página no encontrada */}
+            {/* Pï¿½gina no encontrada */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -150,7 +150,7 @@ const AppContent = () => {
   );
 };
 
-// Componente principal de la aplicación
+// Componente principal de la aplicaciï¿½n
 const App = () => {
   return (
     <ThemeProvider>

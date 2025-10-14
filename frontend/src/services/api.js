@@ -96,6 +96,7 @@ class ApiService {
       // Authentication
       AUTH: {
         LOGIN: '/auth/login',
+        LOCAL_LOGIN: '/auth/local/login',
         LOGOUT: '/auth/logout',
         REFRESH: '/auth/refresh',
         MICROSOFT: '/auth/microsoft',

@@ -153,6 +153,28 @@ class AuthService {
   }
 
   /**
+   * Login with local credentials (for demo/development mode)
+   */
+  async loginWithLocal(email, password) {
+    try {
+      const { apiService } = await import('./api');
+
+      const response = await apiService.post('/auth/local/login', {
+        email,
+        password,
+      });
+
+      // Store authentication data
+      this.storeAuthData(response);
+
+      return response.user;
+    } catch (error) {
+      console.error('Local login error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Handle authentication response
    */
   async handleAuthResponse(response) {
@@ -198,9 +220,11 @@ class AuthService {
    */
   storeAuthData(authData) {
     localStorage.setItem(this.storageKeys.TOKEN, authData.access_token);
-    localStorage.setItem(this.storageKeys.REFRESH_TOKEN, authData.refresh_token);
+    if (authData.refresh_token) {
+      localStorage.setItem(this.storageKeys.REFRESH_TOKEN, authData.refresh_token);
+    }
     localStorage.setItem(this.storageKeys.USER, JSON.stringify(authData.user));
-    
+
     // Store session info
     const session = {
       loginTime: Date.now(),
@@ -463,6 +487,9 @@ class AuthService {
   }
 }
 
+// Create singleton instance
+const authServiceInstance = new AuthService();
+
 // Export singleton instance
-export const AuthService = new AuthService();
-export default AuthService;
+export { authServiceInstance as AuthService };
+export default authServiceInstance;

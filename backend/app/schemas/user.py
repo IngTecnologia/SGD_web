@@ -14,30 +14,34 @@ from ..models.user import UserRole, UserStatus
 
 class UserBase(BaseModel):
     """Esquema base para usuario"""
-    email: EmailStr = Field(..., description="Email corporativo del usuario")
+    email: str = Field(..., description="Email corporativo del usuario")
     name: str = Field(..., min_length=2, max_length=200, description="Nombre completo")
     given_name: Optional[str] = Field(None, max_length=100, description="Nombre")
     surname: Optional[str] = Field(None, max_length=100, description="Apellido")
     display_name: Optional[str] = Field(None, max_length=200, description="Nombre para mostrar")
-    
+
     # Información organizacional
     department: Optional[str] = Field(None, max_length=100, description="Departamento")
     job_title: Optional[str] = Field(None, max_length=100, description="Cargo")
     office_location: Optional[str] = Field(None, max_length=100, description="Ubicación de oficina")
     company_name: Optional[str] = Field(None, max_length=100, description="Nombre de empresa")
-    
+
     # Información de contacto adicional
     phone: Optional[str] = Field(None, max_length=20, description="Teléfono de oficina")
     mobile_phone: Optional[str] = Field(None, max_length=20, description="Teléfono móvil")
 
     @validator('email')
     def validate_email_domain(cls, v):
-        """Validar que el email sea del dominio corporativo si está configurado"""
-        # Esta validación se puede personalizar según el dominio de la empresa
-        if v and not v.lower().endswith(('.com', '.co', '.org', '.net')):
-            # En producción, aquí se validaría contra dominios específicos
-            pass
-        return v.lower()
+        """Validar email permitiendo dominios .local para desarrollo"""
+        if v:
+            v = v.lower().strip()
+            # Validación básica de formato email
+            if '@' not in v or len(v.split('@')) != 2:
+                raise ValueError('Email debe tener formato válido')
+            local_part, domain = v.split('@')
+            if not local_part or not domain:
+                raise ValueError('Email debe tener formato válido')
+        return v.lower() if v else v
 
     @validator('phone', 'mobile_phone')
     def validate_phone(cls, v):
@@ -204,6 +208,24 @@ class UserLogin(BaseModel):
     """Esquema para datos de login"""
     email: EmailStr = Field(description="Email del usuario")
     microsoft_token: str = Field(description="Token de Microsoft")
+
+
+class UserLocalLogin(BaseModel):
+    """Esquema para login local (demo/desarrollo)"""
+    email: str = Field(description="Email del usuario")
+    password: str = Field(min_length=6, description="Contraseña del usuario")
+
+    @validator('email')
+    def validate_email(cls, v):
+        """Validar email permitiendo dominios .local para desarrollo"""
+        v = v.lower().strip()
+        # Validación básica de formato email
+        if '@' not in v or len(v.split('@')) != 2:
+            raise ValueError('Email debe tener formato válido')
+        local_part, domain = v.split('@')
+        if not local_part or not domain:
+            raise ValueError('Email debe tener formato válido')
+        return v
 
 
 class UserLoginResponse(BaseModel):

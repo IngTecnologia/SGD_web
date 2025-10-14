@@ -148,9 +148,10 @@ class Document(Base):
     
     # Código QR asociado
     qr_code = relationship(
-        "QRCode", 
-        back_populates="associated_document",
-        foreign_keys=[qr_code_id]
+        "QRCode",
+        foreign_keys=[qr_code_id],
+        uselist=False,
+        primaryjoin="Document.qr_code_id == foreign(QRCode.qr_id)"
     )
     
     def __repr__(self):

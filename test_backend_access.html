@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Backend Access</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        button {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: #339af0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test de Acceso al Backend</h1>
+    <p>Este test verifica si tu navegador puede acceder a localhost:8000</p>
+
+    <button onclick="testBackend()">Probar Conexión</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div style="padding: 15px;">Probando conexión...</div>';
+
+            try {
+                console.log('Intentando conectar a http://localhost:8000/health');
+                const response = await fetch('http://localhost:8000/health');
+                console.log('Response:', response);
+                const data = await response.json();
+                console.log('Data:', data);
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ ÉXITO: Tu navegador PUEDE acceder a localhost:8000</strong>
+                        <p>Versión: ${data.version}</p>
+                        <p>Estado: ${data.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error completo:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ ERROR: Tu navegador NO puede acceder a localhost:8000</strong>
+                        <p><strong>Tipo de error:</strong> ${error.name}</p>
+                        <p><strong>Mensaje:</strong> ${error.message}</p>
+                        <p><strong>¿Qué significa esto?</strong></p>
+                        <p>El puerto 8000 en Docker no es accesible desde tu navegador de Windows.</p>
+                        <p><strong>Solución:</strong> Usar nginx en puerto 80 como proxy.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-ejecutar
+        window.addEventListener('load', () => {
+            setTimeout(testBackend, 500);
+        });
+    </script>
+</body>
+</html>

@@ -79,9 +79,9 @@ class QRCode(Base):
     
     # Documento asociado (si se ha usado)
     associated_document = relationship(
-        "Document", 
-        back_populates="qr_code",
-        foreign_keys=[used_in_document_id]
+        "Document",
+        foreign_keys=[used_in_document_id],
+        uselist=False
     )
     
     def __repr__(self):
